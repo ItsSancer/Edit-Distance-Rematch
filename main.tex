@@ -4,15 +4,32 @@
 \usepackage{amsmath, amssymb, amsthm}
 
 \newtheorem{theorem}{Theorem}  
-\usepackage{unicode-math}
+%\usepackage{unicode-math}
 \usepackage{algorithm, algorithmicx}  % Para pseudocódigo
 \usepackage{tikz}  % Para gráficos
 \usetikzlibrary{automata, positioning}
 \usepackage{booktabs}
 \usepackage{stmaryrd}
+\usepackage{fullpage}
 
 \usepackage{tcolorbox}
 \tcbuselibrary{skins}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%			COMMENTS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{todonotes}
+\newcommand{\santiago}[1]{\todo[inline, color=green!20]{{\bf S:} #1}}
+\newcommand{\cristian}[1]{\todo[inline, color=red!20]{{\bf C:} #1}}
+
+\newcommand{\ox}{x\!\vdash}
+\newcommand{\cx}{\dashv\!x}
+\newcommand{\Vars}{\operatorname{Vars}}
+\newcommand{\doc}{\operatorname{doc}}
+\newcommand{\tup}{\operatorname{tup}}
 
 
 \newtcolorbox{notabox}{
@@ -30,7 +47,6 @@
 }
 
 
-
 \title{Equivalence between models for regex-based information extraction with errors}
 \date{\today}
 
@@ -46,81 +62,97 @@ We formalize and prove the equivalence between two models for regex-based inform
 
 \subsection{Basic definitions}
 
-\textbf{Document and spans.} A document $d$ is a string over a finit alphabet $\Sigma$, we write $d= a_0a_2...a_{n-1}$ to denote a document of legth $|d| = n$. A span over a document $d$ is a pair $s = [i, j\rangle$ of natural numbers $i$ and $j$ with $0 \leq i \leq j \leq |d|$. $s$ is associated with a substring of $d$ from position $i$ to position $j-1$. We denote this substring by $d(s)$. Given two spans $s_1 = [i_1, j_1\rangle$ and $s_2 = [i_2, j_2\rangle$, the concatenation of $s_1$ and $s_2$ is defined as $s_1 \cdot s_2 = [i_1, j_2\rangle$, whenever $j_1 = i_2$.\\
+\paragraph{Document and spans.} A document $d$ is a string over a finit alphabet $\Sigma$, we write $d= a_0a_2...a_{n-1}$ to denote a document of legth $|d| = n$. A span over a document $d$ is a pair $s = [i, j\rangle$ of natural numbers $i$ and $j$ with $0 \leq i \leq j \leq |d|$. $s$ is associated with a substring of $d$ from position $i$ to position $j-1$. We denote this substring by $d(s)$. Given two spans $s_1 = [i_1, j_1\rangle$ and $s_2 = [i_2, j_2\rangle$, the concatenation of $s_1$ and $s_2$ is defined as $s_1 \cdot s_2 = [i_1, j_2\rangle$, whenever $j_1 = i_2$.
 
-\textbf{Mappings}. Let $V$ be a fixed set of variables, disjoint from $\Sigma$. A \textit{mapping} is a function $\mu$ from a finite set of variables $dom(\mu) \subseteq V$ to spans. The empty mapping, denoted by $\varnothing$, is the only mapping such that $dom(\varnothing) = \varnothing$. Similarly, $[x \xrightarrow{} s]$ denotes the mapping whose domain only cointains the variable $x$, which it assign to span $s$.\\
+\paragraph{Mappings.} Let $V$ be a fixed set of variables, disjoint from $\Sigma$. A \textit{mapping} is a function $\mu$ from a finite set of variables $dom(\mu) \subseteq V$ to spans. The empty mapping, denoted by $\varnothing$, is the only mapping such that $dom(\varnothing) = \varnothing$. Similarly, $[x \xrightarrow{} s]$ denotes the mapping whose domain only cointains the variable $x$, which it assign to span $s$.
 
-\textbf{Document spanners}. A document spanner is a function that map every document $d$ to a set of mappings $M$, such that the range of each $\mu \in M$ are spans of d modeling the process of extracting information from d. We will work with 3 models for defining spanners: RGX, ref-words and automatas.\\
+\paragraph{Document spanners.} A document spanner is a function that map every document $d$ to a set of mappings $M$, such that the range of each $\mu \in M$ are spans of d modeling the process of extracting information from d. We will work with 3 models for defining spanners: RGX, ref-words and variable-set automata.
 
-
-\textbf{Regex Formulas}. A \textit{regex-formula} (\textbf{RGX} for short) is a regular expression extended with variables (called capture variables). Formally, we define the syntax with the recursive rule:
-
-\[e = \varnothing \mid \epsilon \mid e \mid e \lor e \mid e \cdot e \mid e^* \mid x\{ \; e \; \}\]
+\cristian{Agregar definición general de que es un document spanner.}
 
 
-\textbf{Variable-set automata}. A \textit{variable-set automaton}(VA) can be understood as an $\epsilon-NFA$ that is extended with capture variables in a way analogous to RGX; that is, it behaves a usual finite state automaton with $\epsilon-$transitions, except it can also open and close variables. Formally, a VA $\mathcal{A}$ is tuple $(Q, \Sigma, V, q_0, F, \delta )$, where $\Sigma$ is a finite set of alphabet symbols, V is a finite set of variables, Q is a finite set of states, $q_0 \in Q$ is an initial state, $F \subseteq Q$ is a set of final states and $\delta$ is a transition relation consisting of letter transitions of the form $(q, a, q')$ and variable transition of the form $(q, x\vdash, q')$ or $(q, \dashv x, q')$, where $q, q' \in Q$, $a \in Q$ and $x \in V$. We define the set $Vars(\mathcal{A})$ as the set of all variables that occur in $\mathcal{A}$
+\paragraph{Regex formulas.} A \textit{regex-formula} (\textbf{RGX} for short) is a regular expression extended with variables in $V$ (called capture variables). Formally, we define the syntax with the recursive rule:
 
-A configuration of a VA $\mathcal{A}$ over a document $d = a_0 a_1 ... a_{n-1}$ is a tuple $(q, i)$, where $q \in Q$ is the current state and $i \leq n$ is the current position in the document. A run $\rho$ of $\mathcal{A}$ is sequence of the form: \[\rho := (q_0, i_o) \xrightarrow[]{a_0}(q_1, i_1) \xrightarrow[]{a_1} \cdots \xrightarrow[]{a_{n-1}} (q_{n-1}, i_{n-1})\]where $a_i \in \Sigma \cup \{x\vdash, \dashv x \; | \; x \in V\}$ and $(q_i, a_{i+1}, q_{i+1})$. Moreover, $i_0...i_{n-1}$ is a non-decreasing sequence such that $i_0 = 1$ and $i_{n-1} = |d|$, and $i_{j+1} = i_j + 1$ if $a_{j+1} \in \Sigma$ and $i_{n-1} = i_{j}$ otherwise. \\
+\[e \ := \ \varnothing \mid \epsilon \mid e \mid e \lor e \mid e \cdot e \mid e^* \mid x\{ \; e \; \}\]
+
+\cristian{Agregar la semántica de RGX.}
+
+\paragraph{Variable-set automata.} A \textit{variable-set automaton}(VA) can be understood as an $\epsilon$-NFA that is extended with capture variables in a way analogous to RGX; that is, it behaves a usual finite state automaton with $\epsilon-$transitions, except it can also open and close variables. Formally, a VA $\mathcal{A}$ is tuple $(Q, \Sigma, V, q_0, F, \delta )$, where $\Sigma$ is a finite set of alphabet symbols, V is a finite set of variables, Q is a finite set of states, $q_0 \in Q$ is an initial state, $F \subseteq Q$ is a set of final states and $\delta$ is a transition relation consisting of letter transitions of the form $(q, a, q')$ and variable transition of the form $(q, \ox, q')$ or $(q, \cx, q')$, where $q, q' \in Q$, $a \in Q$ and $x \in V$. We define the set $\Vars(\mathcal{A})$ as the set of all variables that occur in $\mathcal{A}$.
+
+A configuration of a VA $\mathcal{A}$ over a document $d = a_0 a_1 ... a_{n-1}$ is a tuple $(q, i)$, where $q \in Q$ is the current state and $i \leq n$ is the current position in the document. A run $\rho$ of $\mathcal{A}$ is sequence of the form: \[\rho := (q_0, i_o) \xrightarrow[]{a_0}(q_1, i_1) \xrightarrow[]{a_1} \cdots \xrightarrow[]{a_{n-1}} (q_{n-1}, i_{n-1})\]where $a_i \in \Sigma \cup \{\ox, \cx\; | \; x \in V\}$ and $(q_i, a_{i+1}, q_{i+1})$. Moreover, $i_0...i_{n-1}$ is a non-decreasing sequence such that $i_0 = 1$ and $i_{n-1} = |d|$, and $i_{j+1} = i_j + 1$ if $a_{j+1} \in \Sigma$ and $i_{n-1} = i_{j}$ otherwise. 
+
+\cristian{Agregar la semántica de spanners.}
 
 
-\textbf{Ref-words}. For a finite set $V$ of variables, ref-words are defined over the extended alphabet $\Sigma \cup \Gamma_V$, where $\Gamma_v := \{\vdash x, \dashv x \in V\}$, we assume that $\Gamma_V$ is disjoint with $\Sigma$. Ref-words extend strings over $\Sigma$ by encoding opening $(x\vdash)$ and closing $(\dashv x)$ of variables.
-A ref-words $r \in (\Sigma \cup \Gamma_V)^*$ is valid if every ocurring variable is opened and closed exactly once. For every valid ref-word r over $(\Sigma \cup \Gamma_V)$ we define $Vars(r)$ as the set of variables $x \in V$ which ocurr in the ref-word. More formally \[Vars(r) := \{ x \in V \; | \; \exists r^{prev}_x, r_x, r_x^{post} \in (\Sigma \cup \Gamma_V)^*.\; r = r_x^{prev} \cdot x\vdash \cdot r_x \cdot \dashv x \cdot r_x^{post}\}\]
-
-Intuitively, each valid ref-word encondes a mapping for some document d, the variable markers encode where the spans begin and end. Formally, we define functions doc and tup that, given a valid ref-word, output the corresponding document and mapping. The morphism $doc: (\Sigma \cup \Gamma_V)^* \xrightarrow[]{} \Sigma^*$ is defined as:
-
+\paragraph{Ref-words.} For a finite set $V$ of variables, ref-words are defined over the extended alphabet $\Sigma \cup \Gamma_V$, where $\Gamma_v := \{\ox, \cx \in V\}$, we assume that $\Gamma_V$ is disjoint with $\Sigma$. Ref-words extend strings over $\Sigma$ by encoding opening $(\ox)$ and closing $(\cx)$ of variables.
+A ref-words $r \in (\Sigma \cup \Gamma_V)^*$ is valid if every ocurring variable is opened and closed exactly once. For every valid ref-word r over $(\Sigma \cup \Gamma_V)$ we define $\Vars(r)$ as the set of variables $x \in V$ which ocurr in the ref-word. More formally:
 \[
-\operatorname{doc}(a) :=
+\Vars(r) := \{ x \in V \; | \; \exists r^{prev}_x, r_x, r_x^{post} \in (\Sigma \cup \Gamma_V)^*.\; r = r_x^{prev} \cdot x\vdash \cdot r_x \cdot \dashv x \cdot r_x^{post}\}
+\]
+
+Intuitively, each valid ref-word encondes a mapping for some document d, the variable markers encode where the spans begin and end. Formally, we define functions $\doc$ and $\tup$ that, given a valid ref-word, output the corresponding document and mapping. The morphism $\doc: (\Sigma \cup \Gamma_V)^* \xrightarrow[]{} \Sigma^*$ is defined as:
+\[
+\doc(a) :=
 \begin{cases}
 a & \text{if } a \in \Sigma \\[6pt]
 \varepsilon & \text{if } a \in \Gamma_V
 \end{cases}
 \]
-
-
-Now, we have that every valid ref-word has a unique factorization\[r = r_x^{prev} \cdot x\vdash \cdot r_x \cdot \dashv x \cdot r_x^{post}\], for each $x \in Vars(r)$. We can define de function tup as \[tup(r) := \{x \xrightarrow[]{} [i_x, j_x\rangle \; | \; x \in Vars(r), i_x = |doc(r^{prev}_x)|, j_x = i_x + |doc(r_x)|\}\]
-
+Now, we have that every valid ref-word has a unique factorization
+\[
+r = r_x^{prev} \cdot x\vdash \cdot r_x \cdot \dashv x \cdot r_x^{post}
+\] 
+for each $x \in \Vars(r)$. We can define de function $\tup$ as 
+\[
+\tup(r) := \{x \xrightarrow[]{} [i_x, j_x\rangle \; | \; x \in \Vars(r), i_x = |\doc(r^{prev}_x)|, j_x = i_x + |\doc(r_x)|\}
+\]
 The usage of the doc morphism ensures that indices $i_x$ and $j_x$  refer to positions in the document and do not consider other variable operations. 
-\subsection{REmatch Semantics}
-\label{sec:rematch-semantics}
 
-REmatch's formal semantics are defined through inductive rules that specify how patterns match documents and produce variable bindings. The core semantic definition appears in Table~\ref{tab:rematch-semantics}, which we explain below.
+\subsection{Edit distance}
 
-\subsubsection{Semantic Foundations}
-The semantics operates on two levels:
-\begin{itemize}
-    \item $\llbracket e \rrbracket_d$: The set of all $(span, mapping)$ pairs where $e$ matches document substring $d[span]$
-    \item  $\llbracket e \rrbracket_d$: The final variable mappings produced by matching $e$ against entire document $d$
-\end{itemize}
+\cristian{Agregar las operaciones de ediciones y edit distance acá.}
+%
+%\subsection{REmatch Semantics}
+%\label{sec:rematch-semantics}
+%
+%REmatch's formal semantics are defined through inductive rules that specify how patterns match documents and produce variable bindings. The core semantic definition appears in Table~\ref{tab:rematch-semantics}, which we explain below.
+%
+%\subsubsection{Semantic Foundations}
+%The semantics operates on two levels:
+%\begin{itemize}
+%    \item $\llbracket e \rrbracket_d$: The set of all $(span, mapping)$ pairs where $e$ matches document substring $d[span]$
+%    \item  $\llbracket e \rrbracket_d$: The final variable mappings produced by matching $e$ against entire document $d$
+%\end{itemize}
+%
+%\begin{table}[htbp]
+%\centering
+%\caption{Inductive semantics of REQL queries}
+%\label{tab:rematch-semantics}
+%\begin{tabular}{ll}
+%\toprule
+%\textbf{Pattern} & \textbf{Semantics} \\
+%\midrule
+%$a$ & $\llbracket a \rrbracket_d = \{(s, \emptyset) \mid s \in \text{span}(d) \land d(s) = a\}$ \\
+%$.$ & $\llbracket . \rrbracket_d = \{([i,i+1\rangle, \emptyset) \mid 0 \leq i < |d|\}$ \\
+%$[w]$ & $\llbracket [w] \rrbracket_d = \{(s, \emptyset) \mid d(s) \in \text{set}(w)\}$ \\
+%$\texttt{!x}\{e\}$ & $\llbracket \texttt{!x}\{e\} \rrbracket_d = \{(s, \mu) \mid \exists (s, \mu') \in \llbracket e \rrbracket_d : \mu = \mu' \cup [x \mapsto s]\}$ \\
+%$e_1e_2$ & $\llbracket e_1e_2 \rrbracket_d = \{(s_1 \cdot s_2, \mu_1 \cup \mu_2) \mid (s_i, \mu_i) \in \llbracket e_i \rrbracket_d\}$ \\
+%$e_1|e_2$ & $\llbracket e_1|e_2 \rrbracket_d = \llbracket e_1 \rrbracket_d \cup \llbracket e_2 \rrbracket_d$ \\
+%$e^*$ & $\llbracket e^* \rrbracket_d = \bigcup_{k\geq0} \llbracket e^k \rrbracket_d$ \\
+%\bottomrule
+%\end{tabular}
+%\end{table}
 
-\begin{table}[htbp]
-\centering
-\caption{Inductive semantics of REQL queries}
-\label{tab:rematch-semantics}
-\begin{tabular}{ll}
-\toprule
-\textbf{Pattern} & \textbf{Semantics} \\
-\midrule
-$a$ & $\llbracket a \rrbracket_d = \{(s, \emptyset) \mid s \in \text{span}(d) \land d(s) = a\}$ \\
-$.$ & $\llbracket . \rrbracket_d = \{([i,i+1\rangle, \emptyset) \mid 0 \leq i < |d|\}$ \\
-$[w]$ & $\llbracket [w] \rrbracket_d = \{(s, \emptyset) \mid d(s) \in \text{set}(w)\}$ \\
-$\texttt{!x}\{e\}$ & $\llbracket \texttt{!x}\{e\} \rrbracket_d = \{(s, \mu) \mid \exists (s, \mu') \in \llbracket e \rrbracket_d : \mu = \mu' \cup [x \mapsto s]\}$ \\
-$e_1e_2$ & $\llbracket e_1e_2 \rrbracket_d = \{(s_1 \cdot s_2, \mu_1 \cup \mu_2) \mid (s_i, \mu_i) \in \llbracket e_i \rrbracket_d\}$ \\
-$e_1|e_2$ & $\llbracket e_1|e_2 \rrbracket_d = \llbracket e_1 \rrbracket_d \cup \llbracket e_2 \rrbracket_d$ \\
-$e^*$ & $\llbracket e^* \rrbracket_d = \bigcup_{k\geq0} \llbracket e^k \rrbracket_d$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsubsection{Key Semantic Rules}
-The table shows how REmatch composes matches from subexpressions:
-
-
-This semantic model enables REmatch to:
-\begin{itemize}
-    \item Track all possible matches simultaneously
-    \item Maintain correct variable binding scopes
-    \item Compose matches algebraically via span concatenation
-\end{itemize}
+%\subsubsection{Key Semantic Rules}
+%The table shows how REmatch composes matches from subexpressions:
+%
+%
+%This semantic model enables REmatch to:
+%\begin{itemize}
+%    \item Track all possible matches simultaneously
+%    \item Maintain correct variable binding scopes
+%    \item Compose matches algebraically via span concatenation
+%\end{itemize}
 
 \subsection{Edit Distance and Error Formalization}
 \label{sec:edit-distance}
@@ -133,7 +165,7 @@ In document processing with regular expressions, we often encounter texts with i
     \item Extra insertions (e.g., docuument)
 
 
-    "a" -> "abc".  ins(1, b), ins(c,2) | ins (1,c) ins(1,b)
+    ``a'' $\rightarrow$ ``abc''.  ins(1, b), ins(c,2) | ins (1,c) ins(1,b)
 
 
 \end{itemize}
