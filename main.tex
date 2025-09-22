@@ -66,7 +66,7 @@ We formalize and prove the equivalence between two models for regex-based inform
 
 \paragraph{Mappings.} Let $V$ be a fixed set of variables, disjoint from $\Sigma$. A \textit{mapping} is a function $\mu$ from a finite set of variables $dom(\mu) \subseteq V$ to spans. The empty mapping, denoted by $\varnothing$, is the only mapping such that $dom(\varnothing) = \varnothing$. Similarly, $[x \xrightarrow{} s]$ denotes the mapping whose domain only cointains the variable $x$, which it assign to span $s$.
 
-\paragraph{Document spanners.} A document spanner is a function that map every document $d$ to a set of mappings $M$, such that the range of each $\mu \in M$ are spans of d modeling the process of extracting information from d. We will work with 3 models for defining spanners: RGX, ref-words and variable-set automata.
+\paragraph{Document spanners.} Let V be a fixed set of variables and $d \in \Sigma^*$ a document, a $\operatorname{(V,d)-tuple}$ is a mapping from V to $\operatorname{span(d)}$. A document spanner is a function that map every document $d$ to a set of $\operatorname{(V,d)-tuple}$, such that the range of each $\mu \in M$ are spans of d modeling the process of extracting information from d. For this goal, we will work with 3 models for defining spanners: RGX, ref-words and variable-set automata.
 
 \cristian{Agregar definición general de que es un document spanner.}
 
@@ -74,12 +74,66 @@ We formalize and prove the equivalence between two models for regex-based inform
 \paragraph{Regex formulas.} A \textit{regex-formula} (\textbf{RGX} for short) is a regular expression extended with variables in $V$ (called capture variables). Formally, we define the syntax with the recursive rule:
 
 \[e \ := \ \varnothing \mid \epsilon \mid e \mid e \lor e \mid e \cdot e \mid e^* \mid x\{ \; e \; \}\]
+ 
+\paragraph{Spanner defined by a RGX.}  
+Let $R$ be a RGX and $d \in \Sigma^*$ a document.  
+The semantics of $R$ is defined as a function 
+$\llbracket R \rrbracket$ that assigns 
+to $d$ the set of all mappings $\mu$ produced by matching $R$ against $d$:
+
+\[
+\llbracket R \rrbracket(d) := 
+\{ \mu \mid \mu \text{ is obtained by a successful match of $R$ on $d$} \}.
+\]
+
+The semantics of a RGX $R$ is given recursively as follows:
+
+\begin{itemize}
+
+\item $\llbracket \varnothing \rrbracket(d) := \varnothing.$
+
+\item $\llbracket \epsilon \rrbracket(d) := \{ \varnothing \}.$
+
+\item $\llbracket R_1 \cdot R_2 \rrbracket(d) := \{ \mu_1 \cup \mu_2 \mid d = d_1 d_2,\ \mu_1 \in \llbracket R_1 \rrbracket(d_1),\ \mu_2 \in \llbracket R_2 \rrbracket(d_2),\ \operatorname{dom}(\mu_1) \cap \operatorname{dom}(\mu_2) = \varnothing \}.$
+
+\item $\llbracket R_1 \lor R_2 \rrbracket(d) := \llbracket R_1 \rrbracket(d) \cup \llbracket R_2 \rrbracket(d).$
+
+\item $\llbracket R^* \rrbracket(d) := \{ \mu_1 \cup \cdots \cup \mu_n \mid d = d_1 \cdots d_n,\ \mu_i \in \llbracket R \rrbracket(d_i)\ \text{para todo } i,\ \operatorname{dom}(\mu_i) \cap \operatorname{dom}(\mu_j) = \varnothing\ \text{si } i \neq j \}.$
+
+\item $\llbracket x\{R'\} \rrbracket(d) := \{ \mu' \cup [x \mapsto s] \mid s \in \operatorname{span}(d),\ \mu' \in \llbracket R' \rrbracket(d[s]) \}.$
+
+\end{itemize}
+
+
+
+Thus, $\llbracket R \rrbracket(d)$ denotes the set of mappings resulting from all successful matches of $R$ on $d$.
+
 
 \cristian{Agregar la semántica de RGX.}
 
 \paragraph{Variable-set automata.} A \textit{variable-set automaton}(VA) can be understood as an $\epsilon$-NFA that is extended with capture variables in a way analogous to RGX; that is, it behaves a usual finite state automaton with $\epsilon-$transitions, except it can also open and close variables. Formally, a VA $\mathcal{A}$ is tuple $(Q, \Sigma, V, q_0, F, \delta )$, where $\Sigma$ is a finite set of alphabet symbols, V is a finite set of variables, Q is a finite set of states, $q_0 \in Q$ is an initial state, $F \subseteq Q$ is a set of final states and $\delta$ is a transition relation consisting of letter transitions of the form $(q, a, q')$ and variable transition of the form $(q, \ox, q')$ or $(q, \cx, q')$, where $q, q' \in Q$, $a \in Q$ and $x \in V$. We define the set $\Vars(\mathcal{A})$ as the set of all variables that occur in $\mathcal{A}$.
 
 A configuration of a VA $\mathcal{A}$ over a document $d = a_0 a_1 ... a_{n-1}$ is a tuple $(q, i)$, where $q \in Q$ is the current state and $i \leq n$ is the current position in the document. A run $\rho$ of $\mathcal{A}$ is sequence of the form: \[\rho := (q_0, i_o) \xrightarrow[]{a_0}(q_1, i_1) \xrightarrow[]{a_1} \cdots \xrightarrow[]{a_{n-1}} (q_{n-1}, i_{n-1})\]where $a_i \in \Sigma \cup \{\ox, \cx\; | \; x \in V\}$ and $(q_i, a_{i+1}, q_{i+1})$. Moreover, $i_0...i_{n-1}$ is a non-decreasing sequence such that $i_0 = 1$ and $i_{n-1} = |d|$, and $i_{j+1} = i_j + 1$ if $a_{j+1} \in \Sigma$ and $i_{n-1} = i_{j}$ otherwise. 
+
+Let $\mathcal{A} = (Q, \Sigma, V, q_0, F, \delta)$ be a VA and $d = a_0 a_1 \dots a_{n-1} \in \Sigma^*$ a document.
+\paragraph{}The semantics of $\mathcal{A}$ is a spanner 
+$\llbracket \mathcal{A} \rrbracket$ 
+that maps $d$ to the set of mappings obtained from all accepting runs of  $d$ on $\mathcal{A}$. Each run $\rho$ induces a mapping $\mu_\rho$ defined by:
+\[
+\mu_\rho(x) := [i_{\ox}, i_{\cx})
+\]
+where $i_{\ox}$ is the position when the transition 
+$\ox$ is taken, and $i_{\cx}$ is the position when 
+$\cx$ is taken (assuming each $x \in V$ is opened and closed exactly once).
+
+The semantics of $\mathcal{A}$ on $d$ is then given by:
+\[
+\llbracket \mathcal{A} \rrbracket(d) := 
+\{ \mu_\rho \mid \rho \text{ is an accepting run of } \mathcal{A} \text{ on } d \}.
+\]
+
+
+
 
 \cristian{Agregar la semántica de spanners.}
 
@@ -107,6 +161,16 @@ for each $x \in \Vars(r)$. We can define de function $\tup$ as
 \tup(r) := \{x \xrightarrow[]{} [i_x, j_x\rangle \; | \; x \in \Vars(r), i_x = |\doc(r^{prev}_x)|, j_x = i_x + |\doc(r_x)|\}
 \]
 The usage of the doc morphism ensures that indices $i_x$ and $j_x$  refer to positions in the document and do not consider other variable operations. 
+
+We also define the \emph{trace} morphism $\gamma:(\Sigma \cup \Gamma_V)^* \to \Gamma_V^*$ :
+
+\[
+\gamma(a) :=
+\begin{cases}
+\varepsilon & \text{if } a \in \Sigma \\[6pt]
+a & \text{if } a \in \Gamma_V
+\end{cases}
+\]
 
 \subsection{Edit distance}
 
@@ -154,9 +218,6 @@ The usage of the doc morphism ensures that indices $i_x$ and $j_x$  refer to pos
 %    \item Compose matches algebraically via span concatenation
 %\end{itemize}
 
-\subsection{Edit Distance and Error Formalization}
-\label{sec:edit-distance}
-
 \subsubsection{The Edit Distance Problem}
 In document processing with regular expressions, we often encounter texts with imperfections such as:
 \begin{itemize}
@@ -172,6 +233,7 @@ In document processing with regular expressions, we often encounter texts with i
 
 The \emph{edit distance} between two strings $D$ and $D'$, denoted by $\Delta(D,D')$, is the minimum number of elementary edit operations required to transform $D$ into $D'$. We consider three fundamental operations:\\
 
+\subsubsection{Operations}
 Given a document $D = a_1 \cdots a_n$:
 \begin{center}
 \begin{itemize}
@@ -190,13 +252,12 @@ Given a document $D = a_1 \cdots a_n$:
 
 \subsection{Formal Definition}
 
-Given a document $D \in \Sigma^*$ (where $D = d_1d_2\cdots d_n$) and a sequence of edit operations $E = [op_1, \ldots, op_m]$, we define the transformed document $\mathsf{apply}(D, E)$ recursively as:
+Given a document $D \in \Sigma^*$ (where $D = d_1d_2\cdots d_n$) and a sequence of edit operations $E = [op_1, \ldots, op_m]$, we define the transformed document $E(D)$ recursively as:
 
-\[
-\mathsf{apply}(D, E) = 
+\[D(E) = 
 \begin{cases}
 D & \text{if } E = \emptyset \\
-\mathsf{apply}(\mathsf{op}_1(D), [op_2, \ldots, op_m]) & \text{otherwise}
+E'(\mathsf{op}_1(D)) & \text{otherwise, with } E' = [op_2, op_3, \ldots, op_m]
 \end{cases}
 \]
 
@@ -213,9 +274,9 @@ where each atomic operation $\mathsf{op}_i$ modifies the document as follows:
 \begin{center}
 For any document $D$ and valid operation sequence $E$:
 \begin{enumerate}
-    \item \textbf{Termination}: $\mathsf{apply}(D, E)$ always terminates in $O(|E|)$ steps
-    \item \textbf{Length Change}: $|\mathsf{apply}(D, E)| = |D| + \#\mathsf{ins} - \#\mathsf{del}$
-    \item \textbf{Order Sensitivity}: $\mathsf{apply}(D, [op_1, op_2]) \neq \mathsf{apply}(D, [op_2, op_1])$ in general
+    \item \textbf{Termination}: $E(D)$ always terminates in $O(|E|)$ steps
+    \item \textbf{Length Change}: $|E(D)| = |D| + \#\mathsf{ins} - \#\mathsf{del}$
+    \item \textbf{Order Sensitivity}: $[op_1, op_2](D) \neq [op_2, op_1](D)$ in general
 \end{enumerate}
 \end{center}
 
@@ -226,34 +287,81 @@ For any document $D$ and valid operation sequence $E$:
 Let $D = \texttt{algorithm}$ and $E = [\mathsf{ins}(3,\texttt{h}), \mathsf{del}(6), \mathsf{sub}(2,\texttt{L})]$. Then:
 
 \begin{align*}
-\mathsf{apply}(D, E) &= \mathsf{apply}(\mathsf{ins}(3,\texttt{h})(\texttt{algorithm}), [\mathsf{del}(6), \mathsf{sub}(2,\texttt{L})]) \\
-&= \mathsf{apply}(\texttt{alghorithm}, [\mathsf{del}(6), \mathsf{sub}(2,\texttt{L})]) \\
-&= \mathsf{apply}(\texttt{alghorthm}, [\mathsf{sub}(2,\texttt{L})]) \\
-&= \texttt{alLgrithm}
+E(D) &= [\mathsf{del}(6), \mathsf{sub}(2,\texttt{L})](\mathsf{ins}(3,\texttt{h})(\texttt{algorithm})) \\
+&= [\mathsf{del}(6), \mathsf{sub}(2,\texttt{L})](\texttt{alghorithm}) \\
+&= [\mathsf{sub}(2,\texttt{L})](\mathsf{del(6)}(\texttt{alghorthm})) \\
+&= [\mathsf{sub}(2,\texttt{L})](\texttt{alghothm})\\
+&= \texttt{aLgrithm} 
 \end{align*}
 \end{center}
 
 \section{Models for information extraction with errors}
 
 Now, we will consider two diferent approaches to aboard the edit distance problem in Rematch engine. 
+\subsection{Error over a modified document}
+
+\paragraph{}The first option is the straightforward version. Take a document d, compute all the possibles documents d' that the edit distance between d and d' is less than k and prove if d' matches de REQL expresion.
+
+This is the semantics for this approach: \\
+
+Given a document $d \in \Sigma^*$ (where $d = d_1d_2\cdots d_n$) and a REQL expression $R$, we define the semantics of R with k error as it follows:
+
+
+\[ \llbracket R + k \rrbracket_d = \{(\mu, E) \; | \; \exists d'. E(d) = d' \land \mu \in \llbracket R \rrbracket_{d'} \land | E | \leq k  \}\]
+
+
+We make a match in a new document d' that is the result of apply the edits in E over d. The span and the mapping is over d' because we only compute d' and treat it like the original document.
+
+\subsubsection{Example}
+
+Using the same example as before, with $d = a$, $e= a!x\{b\}c$ and $k = 2$ the following is a valid match in the new semantics:
+
+\[([0, 3\rangle, \mu := [x \mapsto [1, 2\rangle], E = (ins(1, b), ins(c,2))\]
+
+The document d' that make the  match is $d' = abc$, the span and mapping is over this document.
+
+Now we give the user the new document and the list of edits that we make over the original to get the new one.
+
+% \subsubsection{Idea para computar}
+
+% Se puede seguir una idea similar a la que usa en el modulo de filtering, aplicar un algoritmo de light search sobre el documento original que, si es que no se llega a encontrar ningun match, pueda agregar al documento los pasos que faltaron para obtener al menos un match 
+
 
 \subsection{Error over the original document}
 
-Normally, when we think in some computer system that correct typos, we imagine that this system say us: ``This is your document, you have to make this changes to correct it''\\
+\paragraph{}Let $V$ be a finite set of variables and $\Gamma_V := \{\,\ox,\cx\mid x\in V\,\}$,
+with $\Gamma_V \cap \Sigma = \varnothing$. Given a REQL $R$, let $\mathcal{L}_{\mathrm{ref}}(R)\subseteq(\Sigma\cup\Gamma_V)^*$ be the standard ref-language of $R$,
+consisting of valid ref-words generated by $R$, the RGX $!x\{R'\}$ is equivalent to $\ox \cdot R' \cdot \cx$ wich capture a ref-word.
+We lift the $k$-error notion to ref-words as follow:
 
-In this approach, we will work on that idea. Given a document $d \in \Sigma^*$ (where $d = d_1d_2\cdots d_n$) and a REQL expression $R$, we define the semantics of R with k error as it follows:
+\[
+\mathcal{L}_{\mathrm{ref}}^{\le k}(R)
+\;:=\;
+\bigl\{\, r \ \text{valid} \ \big|\ 
+\exists r' \in \mathcal{L}_{\mathrm{ref}}(R):
+\ \gamma(r)=\gamma(r') \ \land\ \Delta\bigl(\doc(r),\doc(r')\bigr)\le k \bigr\}.
+\]
 
-\[ \llbracket R \rrbracket^{\leq K}_d = \{(s, \mu, E) \; | \; s \in\mathsf{span(d)} \land \mathsf{apply}(d, E) \in \mathcal{L}(R) \land |E| \leq K \}\]
+Intuitively, $r$ keeps the same sequence of variable openings/closings as some $r'$ accepted by $R$,
+while allowing up to $k$ edits on the document.
+
+The spanner defined by this ref-language is:
+
+\[\llbracket\mathcal{L}_{\mathrm{ref}}^{\le k}(R) \rrbracket_r := \{\tup(r) \mid r \in \mathcal{L}_{\mathrm{ref}}^{\le k}(R) \} \]
+
+\paragraph{Spanner semantics with $k$ errors.}
+For a document $d\in\Sigma^*$ and a mapping $\mu$ we can define an unique ref-word $r$ such that $\doc(r) = d$ and $\tup(r) = \mu$. The semantic of a RGX R with k errors is:
+\[
+\llbracket R \rrbracket^{\le k}(d)
+\;:=\;
+ \{(\mu, E) \mid \exists r. \doc(r) = d \land  \tup(r) = \mu \land \mu \in \llbracket\mathcal{L}_{\mathrm{ref}}^{\le k}(R) \rrbracket_r\}\]
 
 
-\begin{notabox}
-Santiago: Para este caso, apply falla, ya que en esta semantica, como los errores se hacen sobre los spans del documento original, pueden haber varios errores en la misma posicion, lo que hace que el apply falle. Las opciones para arreglarlo son concatenar errores en una misma posicion o usar un apply que lleve un trackeo de la posicion
-\end{notabox}
+
+In both definitions, spans and mappings are taken \emph{over the original document $d$};
+edits are accounted for only in the $\Sigma$-projection used to witness compatibility with $R$.
 
 
-Here, we output a span and a mapping over the original document and the list of errors that the user have to make in de document d, to complete de match.
-
-As we work over spans in the original document, we can have errors that apply in the same position of the document, for that reason, es crucial to mantain a correct order in the edits to get te correct match.
 
 \subsubsection{Example}
 
@@ -269,35 +377,6 @@ Given the document $d = a$ and the regex $e = a!x\{b\}c$, with $k = 2$ two error
 Usar un automata de levenstein que lleve registro de las posiciones del documento donde se hicieron los errores.
 
 
-\subsection{Error over a modified document}
-
-The last approach can be confusing, as we don't use spans of the document with the changes, is not really clear how to make the edits. Moreover, is neither clear how to build the errors sequence if we work over the original document.
-
-The other option is the straightforward version. Take a document d, compute all the possibles documents d' that the edit distance between d and d' is less than k and prove if d' matches de REQL expresion.
-
-This is the semantics for this approach: \\
-
-Given a document $d \in \Sigma^*$ (where $d = d_1d_2\cdots d_n$) and a REQL expression $R$, we define the semantics of R with k error as it follows:
-
-
-\[ \llbracket R + k \rrbracket_d = \{(s, \mu, E) \; | \; \exists d'. \mathsf{apply}(d, E) = d' \land (s, \mu) \in \llbracket R \rrbracket_{d'} \land | E | \leq K  \}\]
-
-
-We make a match in a new document d' that is the result of apply the edits in E over d. The span and the mapping is over d' because we only compute d' and treat it like the original document.
-
-\subsubsection{Example}
-
-Using the same example as before, with $d = a$, $e= a!x\{b\}c$ and $k = 2$ the following is a valid match in the new semantics:
-
-\[([0, 3\rangle, \mu := [x \mapsto [1, 2\rangle], E = (ins(1, b), ins(c,2))\]
-
-The document d' that make the  match is $d' = abc$, the span and mapping is over this document.
-
-Now we give the user the new document and the list of edits that we make over the original to get the new one.
-
-\subsubsection{Idea para computar}
-
-Se puede seguir una idea similar a la que usa en el modulo de filtering, aplicar un algoritmo de light search sobre el documento original que, si es que no se llega a encontrar ningun match, pueda agregar al documento los pasos que faltaron para obtener al menos un match 
 
 \section{Equivalence Proof}
 \label{sec:equivalence}
