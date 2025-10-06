@@ -68,7 +68,6 @@ We formalize and prove the equivalence between two models for regex-based inform
 
 \paragraph{Document spanners.} Let V be a fixed set of variables and $d \in \Sigma^*$ a document, a $\operatorname{(V,d)-tuple}$ is a mapping from V to $\operatorname{span(d)}$. A document spanner is a function that map every document $d$ to a set of $\operatorname{(V,d)-tuple}$, such that the range of each $\mu \in M$ are spans of d modeling the process of extracting information from d. For this goal, we will work with 3 models for defining spanners: RGX, ref-words and variable-set automata.
 
-\cristian{Agregar definición general de que es un document spanner.}
 
 
 \paragraph{Regex formulas.} A \textit{regex-formula} (\textbf{RGX} for short) is a regular expression extended with variables in $V$ (called capture variables). Formally, we define the syntax with the recursive rule:
@@ -108,9 +107,6 @@ The semantics of a RGX $R$ is given recursively as follows:
 
 Thus, $\llbracket R \rrbracket(d)$ denotes the set of mappings resulting from all successful matches of $R$ on $d$.
 
-
-\cristian{Agregar la semántica de RGX.}
-
 \paragraph{Variable-set automata.} A \textit{variable-set automaton}(VA) can be understood as an $\epsilon$-NFA that is extended with capture variables in a way analogous to RGX; that is, it behaves a usual finite state automaton with $\epsilon-$transitions, except it can also open and close variables. Formally, a VA $\mathcal{A}$ is tuple $(Q, \Sigma, V, q_0, F, \delta )$, where $\Sigma$ is a finite set of alphabet symbols, V is a finite set of variables, Q is a finite set of states, $q_0 \in Q$ is an initial state, $F \subseteq Q$ is a set of final states and $\delta$ is a transition relation consisting of letter transitions of the form $(q, a, q')$ and variable transition of the form $(q, \ox, q')$ or $(q, \cx, q')$, where $q, q' \in Q$, $a \in Q$ and $x \in V$. We define the set $\Vars(\mathcal{A})$ as the set of all variables that occur in $\mathcal{A}$.
 
 A configuration of a VA $\mathcal{A}$ over a document $d = a_0 a_1 ... a_{n-1}$ is a tuple $(q, i)$, where $q \in Q$ is the current state and $i \leq n$ is the current position in the document. A run $\rho$ of $\mathcal{A}$ is sequence of the form: \[\rho := (q_0, i_o) \xrightarrow[]{a_0}(q_1, i_1) \xrightarrow[]{a_1} \cdots \xrightarrow[]{a_{n-1}} (q_{n-1}, i_{n-1})\]where $a_i \in \Sigma \cup \{\ox, \cx\; | \; x \in V\}$ and $(q_i, a_{i+1}, q_{i+1})$. Moreover, $i_0...i_{n-1}$ is a non-decreasing sequence such that $i_0 = 1$ and $i_{n-1} = |d|$, and $i_{j+1} = i_j + 1$ if $a_{j+1} \in \Sigma$ and $i_{n-1} = i_{j}$ otherwise. 
@@ -132,10 +128,6 @@ The semantics of $\mathcal{A}$ on $d$ is then given by:
 \{ \mu_\rho \mid \rho \text{ is an accepting run of } \mathcal{A} \text{ on } d \}.
 \]
 
-
-
-
-\cristian{Agregar la semántica de spanners.}
 
 
 \paragraph{Ref-words.} For a finite set $V$ of variables, ref-words are defined over the extended alphabet $\Sigma \cup \Gamma_V$, where $\Gamma_v := \{\ox, \cx \in V\}$, we assume that $\Gamma_V$ is disjoint with $\Sigma$. Ref-words extend strings over $\Sigma$ by encoding opening $(\ox)$ and closing $(\cx)$ of variables.
@@ -174,7 +166,7 @@ a & \text{if } a \in \Gamma_V
 
 \subsection{Edit distance}
 
-\cristian{Agregar las operaciones de ediciones y edit distance acá.}
+
 %
 %\subsection{REmatch Semantics}
 %\label{sec:rematch-semantics}
@@ -239,9 +231,9 @@ Given a document $D = a_1 \cdots a_n$:
 \begin{itemize}
     \item \textbf{Insertion}: $\mathsf{ins}(p,c)$ - Insert character $c$ at position $p$
     \[ D' = a_1 \cdots a_p c a_{p+1} \cdots a_n \]
-    \item \textbf{Deletion}: $\mathsf{del}(p)$ - Delete character at position $p$
+    \item \textbf{Deletion}: $\mathsf{del}(p, c)$ - Delete character $c$ at position $p$
     \[ D' = a_1 \cdots a_{p-1} a_{p+1} \cdots a_n \]
-    \item \textbf{Substitution}: $\mathsf{sub}(p,c)$ - Replace $a_p$ with $c$
+    \item \textbf{Substitution}: $\mathsf{sub}(p,d, c)$ - Replace character $d$ with character $c$ at position $p$
     \[ D' = a_1 \cdots a_{p-1} c a_{p+1} \cdots a_n \]
 \end{itemize}
 \end{center}
@@ -254,7 +246,7 @@ Given a document $D = a_1 \cdots a_n$:
 
 Given a document $D \in \Sigma^*$ (where $D = d_1d_2\cdots d_n$) and a sequence of edit operations $E = [op_1, \ldots, op_m]$, we define the transformed document $E(D)$ recursively as:
 
-\[D(E) = 
+\[E(D) = 
 \begin{cases}
 D & \text{if } E = \emptyset \\
 E'(\mathsf{op}_1(D)) & \text{otherwise, with } E' = [op_2, op_3, \ldots, op_m]
@@ -265,35 +257,98 @@ where each atomic operation $\mathsf{op}_i$ modifies the document as follows:
 
 \begin{align*}
 \mathsf{ins}(p,c)(D) &= d_1\cdots d_p c d_{p+1}\cdots d_n \quad (0 \leq p \leq n) \\
-\mathsf{del}(p)(D) &= d_1\cdots d_{p-1} d_{p+1}\cdots d_n \quad (1 \leq p \leq n) \\
-\mathsf{sub}(p,c)(D) &= d_1\cdots d_{p-1} c d_{p+1}\cdots d_n \quad (1 \leq p \leq n)
+\mathsf{del}(p, c)(D) &= d_1\cdots d_{p-1} d_{p+1}\cdots d_n \quad (1 \leq p \leq n) \\
+\mathsf{sub}(p,d_p, c)(D) &= d_1\cdots d_{p-1} c d_{p+1}\cdots d_n \quad (1 \leq p \leq n)
 \end{align*}
 
 \subsection{Properties}
 
 \begin{center}
-For any document $D$ and valid operation sequence $E$:
-\begin{enumerate}
-    \item \textbf{Termination}: $E(D)$ always terminates in $O(|E|)$ steps
-    \item \textbf{Length Change}: $|E(D)| = |D| + \#\mathsf{ins} - \#\mathsf{del}$
-    \item \textbf{Order Sensitivity}: $[op_1, op_2](D) \neq [op_2, op_1](D)$ in general
-\end{enumerate}
+	For any document $D$ and valid operation sequence $E$:
+	\begin{enumerate}
+		\item \textbf{Termination}: $E(D)$ always terminates in $O(|E|)$ steps
+		\item \textbf{Length Change}: $|E(D)| = |D| + \#\mathsf{ins} - \#\mathsf{del}$
+		\item \textbf{Order Sensitivity}: $[op_1, op_2](D) \neq [op_2, op_1](D)$ in general
+	\end{enumerate}
 \end{center}
 
 \subsubsection{Example}
 
 \begin{center}
-    
-Let $D = \texttt{algorithm}$ and $E = [\mathsf{ins}(3,\texttt{h}), \mathsf{del}(6), \mathsf{sub}(2,\texttt{L})]$. Then:
+	
+	Let $D = \texttt{algorithm}$ and $E = [\mathsf{ins}(3,\texttt{h}), \mathsf{del}(6), \mathsf{sub}(2,\texttt{L})]$. Then:
+	
+	\begin{align*}
+		E(D) &= [\mathsf{del}(6), \mathsf{sub}(2,\texttt{L})](\mathsf{ins}(3,\texttt{h})(\texttt{algorithm})) \\
+		&= [\mathsf{del}(6), \mathsf{sub}(2,\texttt{L})](\texttt{alghorithm}) \\
+		&= [\mathsf{sub}(2,\texttt{L})](\mathsf{del(6)}(\texttt{alghorthm})) \\
+		&= [\mathsf{sub}(2,\texttt{L})](\texttt{alghothm})\\
+		&= \texttt{aLgrithm} 
+	\end{align*}
+\end{center}
+
+
+\subsection{Application of Edit Sequences on Mappings}
+
+Let $\mu : x \to [i, j \rangle$ be a mapping and a edit operations $E = [op_1, \ldots, op_m]$, we define 
+its corresponding transformation on $\mu$, denoted $E(\mu)$, as the mapping obtained by 
+adjusting all affected intervals to maintain positional consistency with the edited document.
+
+Formally, for each operation $\mathsf{op} \in E$:
+
+The extended mapping transformation is defined recursively:
+\[
+E(\mu) =
+\begin{cases}
+	\mu & \text{if } E = \emptyset, \\[4pt]
+	E'(\mathsf{op}_1(\mu)) & \text{otherwise, where } E' = [op_2, \ldots, op_m].
+\end{cases}
+\]
+
+where each atomic operation $\mathsf{op}_i$ modifies the mapping as follows:
 
 \begin{align*}
-E(D) &= [\mathsf{del}(6), \mathsf{sub}(2,\texttt{L})](\mathsf{ins}(3,\texttt{h})(\texttt{algorithm})) \\
-&= [\mathsf{del}(6), \mathsf{sub}(2,\texttt{L})](\texttt{alghorithm}) \\
-&= [\mathsf{sub}(2,\texttt{L})](\mathsf{del(6)}(\texttt{alghorthm})) \\
-&= [\mathsf{sub}(2,\texttt{L})](\texttt{alghothm})\\
-&= \texttt{aLgrithm} 
+	\mathsf{ins}(p,c)(\mu) &= \begin{cases}
+		[i + 1 , j+1 \rangle & p \leq i\\
+		[i, j +1\rangle  & i < p \leq j\\
+		[i, j \rangle   & j < p
+	\end{cases}\\
+	\mathsf{del}(p, c)(\mu) &= \begin{cases}
+		[i - 1 , j-1 \rangle & p \leq i\\
+		[i, j - 1\rangle  & i < p \leq j\\
+		[i, j \rangle   & j < p
+	\end{cases} \\
+	\mathsf{sub}(p,d, c)(\mu) &= \mu
 \end{align*}
-\end{center}
+
+
+
+In other words, each insertion or deletion shifts the intervals of $\mu$ that occur 
+after the edit position, ensuring that $\mu$ remains consistent with the structure of 
+the transformed document $E(D)$.
+
+This definition guarantees that for any $x \in \operatorname{dom}(\mu)$,
+the relative alignment between $\mu(x)$ and its corresponding content in $E(D)$ 
+is preserved across arbitrary edit sequences.
+
+\subsection{Undo edits}
+
+\paragraph{title}Note that, given a edit sequence $E$, a document $d$ and the document resulting from applying the edit sequence over $d$, $E(d) = d'$, we can easily undo de changes taking the inverse of each operation. We will write  $E^{-1}$ the inverse sequence of edits and it is defined as follow.
+
+For each atomic operation $op_i \in E$: 
+
+\begin{align*}
+	\mathsf{ins}(p,c)(D)^{-1} &= \mathsf{del}(p, c)(D) \\
+	\mathsf{del}(p,c)(D)^{-1} &= \mathsf{ins}(p, c)(D) \\
+	\mathsf{sub}(p, d, c)(D)^{-1} &= \mathsf{sub}(p, c, d)(D)
+\end{align*}
+
+And finally  $E^{-1} = [op_1^{-1}, \ldots, op_n^{-1}]$. Note that this definition works good when we want to undo the edits maded over a mapping $\mu$.
+ 
+ 
+\subsection{Normalized edit sequence}
+
+Two edit sequences $E$ and  $E'$ will we said $\textit{equivalent}$, $E \equiv E'$ if they generate identical output  $E(d) = E'(d)$ when they operate on any document $d$. Given two documents $d$ and $d'$, there exist infinte ways to transform $d$ in $d'$. In order to compare edit sequences, it is convenient to define a normalized form. For this purpose, supose that in a edit sequence $E = [op_1, \ldots, op_n]$, the atomic operation $op_i$ work in the position $d(i)$, we will write $op_i \prec op_j$ if either $i < j$
 
 \section{Models for information extraction with errors}
 
@@ -307,7 +362,7 @@ This is the semantics for this approach: \\
 Given a document $d \in \Sigma^*$ (where $d = d_1d_2\cdots d_n$) and a REQL expression $R$, we define the semantics of R with k error as it follows:
 
 
-\[ \llbracket R + k \rrbracket_d = \{(\mu, E) \; | \; \exists d'. E(d) = d' \land \mu \in \llbracket R \rrbracket_{d'} \land | E | \leq k  \}\]
+\[ \llbracket R^{\leq k} \rrbracket_d = \{(\mu, E) \; | \; \exists d'. E(d) = d' \land \mu \in \llbracket R \rrbracket_{d'} \land | E | \leq k  \}\]
 
 
 We make a match in a new document d' that is the result of apply the edits in E over d. The span and the mapping is over d' because we only compute d' and treat it like the original document.
@@ -316,7 +371,7 @@ We make a match in a new document d' that is the result of apply the edits in E 
 
 Using the same example as before, with $d = a$, $e= a!x\{b\}c$ and $k = 2$ the following is a valid match in the new semantics:
 
-\[([0, 3\rangle, \mu := [x \mapsto [1, 2\rangle], E = (ins(1, b), ins(c,2))\]
+\[([0, 3\rangle, \mu := [x \mapsto [1, 2\rangle], E = (ins(1, b), ins(2,c))\]
 
 The document d' that make the  match is $d' = abc$, the span and mapping is over this document.
 
@@ -329,37 +384,51 @@ Now we give the user the new document and the list of edits that we make over th
 
 \subsection{Error over the original document}
 
-\paragraph{}Let $V$ be a finite set of variables and $\Gamma_V := \{\,\ox,\cx\mid x\in V\,\}$,
-with $\Gamma_V \cap \Sigma = \varnothing$. Given a REQL $R$, let $\mathcal{L}_{\mathrm{ref}}(R)\subseteq(\Sigma\cup\Gamma_V)^*$ be the standard ref-language of $R$,
-consisting of valid ref-words generated by $R$, the RGX $!x\{R'\}$ is equivalent to $\ox \cdot R' \cdot \cx$ wich capture a ref-word.
-We lift the $k$-error notion to ref-words as follow:
+
+Given a document $d \in \Sigma^*$ (where $d = d_1d_2\cdots d_n$), a REQL expression $R$, and an edit sequence $E = [op_1, \ldots, op_m]$, we define the semantics of $R$ with k errors over the \emph{original} document as:
 
 \[
-\mathcal{L}_{\mathrm{ref}}^{\le k}(R)
-\;:=\;
-\bigl\{\, r \ \text{valid} \ \big|\ 
-\exists r' \in \mathcal{L}_{\mathrm{ref}}(R):
-\ \gamma(r)=\gamma(r') \ \land\ \Delta\bigl(\doc(r),\doc(r')\bigr)\le k \bigr\}.
+\llbracket R + k \rrbracket_d = 
+\{\, (\mu, E) \;|\;
+E(\mu) \in \llbracket R \rrbracket_{E(d)} \land |E| \leq k
+\,\}
 \]
 
-Intuitively, $r$ keeps the same sequence of variable openings/closings as some $r'$ accepted by $R$,
-while allowing up to $k$ edits on the document.
+where $\mu$ is a mapping over the original document $d$, and $E(\mu)$ denotes the mapping obtained by applying the same edit sequence $E$ to the spans of $\mu$, ensuring positional consistency with the transformed document $E(d)$.
 
-The spanner defined by this ref-language is:
+In this formulation, the match is reported over the original document $d$, while $E$ represents the minimal sequence of edits required to make $d$ satisfy the REQL expression $R$.
 
-\[\llbracket\mathcal{L}_{\mathrm{ref}}^{\le k}(R) \rrbracket_r := \{\tup(r) \mid r \in \mathcal{L}_{\mathrm{ref}}^{\le k}(R) \} \]
+%\paragraph{}Let $V$ be a finite set of variables and $\Gamma_V := \{\,\ox,\cx\mid x\in V\,\}$,
+%with $\Gamma_V \cap \Sigma = \varnothing$. Given a REQL $R$, let $\mathcal{L}_{\mathrm{ref}}(R)\subseteq(\Sigma\cup\Gamma_V)^*$ be the standard ref-language of $R$,
+%consisting of valid ref-words generated by $R$, the RGX $!x\{R'\}$ is equivalent to $\ox \cdot R' \cdot \cx$ wich capture a ref-word.
+%We lift the $k$-error notion to ref-words as follow:
 
-\paragraph{Spanner semantics with $k$ errors.}
-For a document $d\in\Sigma^*$ and a mapping $\mu$ we can define an unique ref-word $r$ such that $\doc(r) = d$ and $\tup(r) = \mu$. The semantic of a RGX R with k errors is:
-\[
-\llbracket R \rrbracket^{\le k}(d)
-\;:=\;
- \{(\mu, E) \mid \exists r. \doc(r) = d \land  \tup(r) = \mu \land \mu \in \llbracket\mathcal{L}_{\mathrm{ref}}^{\le k}(R) \rrbracket_r\}\]
+%\[
+%\mathcal{L}_{\mathrm{ref}}^{\le k}(R)
+%\;:=\;
+%\bigl\{\, r \ \text{valid} \ \big|\ 
+%\exists r' \in \mathcal{L}_{\mathrm{ref}}(R):
+%\ \gamma(r)=\gamma(r') \ \land\ \Delta\bigl(\doc(r),\doc(r')\bigr)\le k \bigr\}.
+%\]
+
+%Intuitively, $r$ keeps the same sequence of variable openings/closings as some $r'$ accepted by $R$,
+%while allowing up to $k$ edits on the document.
+
+%The spanner defined by this ref-language is:
+
+%\[\llbracket\mathcal{L}_{\mathrm{ref}}^{\le k}(R) \rrbracket_r := \{\tup(r) \mid r \in \mathcal{L}_{\mathrm{ref}}^{\le k}(R) \} \]
+
+%\paragraph{Spanner semantics with $k$ errors.}
+%For a document $d\in\Sigma^*$ and a mapping $\mu$ we can define an unique ref-word $r$ such that $\doc(r) = d$ and $\tup(r) = \mu$. The semantic of a RGX R with k errors is:
+%\[
+%\llbracket R \rrbracket^{\le k}(d)
+%\;:=\;
+ %\{(\mu, E) \mid \exists r. \doc(r) = d \land  \tup(r) = \mu \land \mu \in \llbracket\mathcal{L}_{\mathrm{ref}}^{\le k}(R) \rrbracket_r\}\]
 
 
 
-In both definitions, spans and mappings are taken \emph{over the original document $d$};
-edits are accounted for only in the $\Sigma$-projection used to witness compatibility with $R$.
+%In both definitions, spans and mappings are taken \emph{over the original document $d$};
+%edits are accounted for only in the $\Sigma$-projection used to witness compatibility with $R$.
 
 
 
@@ -377,112 +446,36 @@ Given the document $d = a$ and the regex $e = a!x\{b\}c$, with $k = 2$ two error
 Usar un automata de levenstein que lleve registro de las posiciones del documento donde se hicieron los errores.
 
 
-
 \section{Equivalence Proof}
-\label{sec:equivalence}
 
 \begin{theorem}
-For any document $d$, REQL expression $R$, and error budget $k$, there exists a bijection between:
-\begin{align*}
-\llbracket R \rrbracket^{\leq k}_d &\leftrightarrow \llbracket R + k \rrbracket_d \\
-\end{align*}
-
+	For every document $d\in\Sigma^*$, REQL $R$, and budget $k\in\mathbb{N}$, there is a bijection between
+	\[
+	\llbracket R^{\le k}\rrbracket_d
+	\quad\text{and}\quad
+	\llbracket R + k\rrbracket_d,
+	\]
+	given by translating mappings via the action of the edit sequence $E$ on spans.
 \end{theorem}
 
-\textbf{Proof}\\
+\begin{proof}
+	We define two inverse functions between the sets and prove they are well-defined and mutually inverse.
+	
+\subsubsection{$\llbracket R^{\leq k} \rrbracket \implies \llbracket R + k \rrbracket_d$}
+	Given $(\mu',E)\in \llbracket R^{\le k}\rrbracket_d$, then there exists $d'$ with $E(d)=d'$ and $\mu'\in\llbracket R\rrbracket_{d'}$ and $|E|\le k$.
+	Let $\mu := E^{-1}(\mu')$. Then $E(\mu)=E(E^{-1}(\mu'))=\mu'$, hence
+	\[
+	E(\mu)\in \llbracket R\rrbracket_{E(d)}.
+	\]
+	By definition of the original-document semantics, $(\mu,E)\in \llbracket R + k\rrbracket_d$ with $|E|\le k$.
+	
 
-First, let's define some functions that will help us with the proof:\\
-
-\textbf{Forward and Backwards:} Para un documento $d$, secuencia de errores $E$, we define $\mathsf{dels}_{\leq p}(E), ins_{\leq p}(E)$ as counters of the deletions and insertions edits that are made before position p \\
-
-For example, with $ E = (subs(2, a), del(3), del(4), ins(c, 9) , ins (k ,10)$ we have $\mathsf{dels_{\leq 3}} (E) = 1, \mathsf{dels_{\leq 1}} (E)  = 0, \mathsf{ins_{\leq 10}} (E) = 2$. \\
-
-Let $\Delta_{\leq p} (E) = \mathsf{ins}_{\leq p}(E) - \mathsf{dels}_{\leq p} (E)$. Using this, we can define the $\mathsf{forward}, \mathsf{backward}$ functions as it follows: \\
-
-1. \textbf{For Spans}:
-\[
-\mathsf{forward}([i,j\rangle, E) = [i, j + \Delta_{\leq j}(E)\rangle
-\]
-\[
-\mathsf{backward}([i',j'\rangle, E) = [i', j' - \Delta_{\leq j'}(E)\rangle
-\]
-
-2. \textbf{For Mappings}:
-\[
-\mathsf{forward}(\mu, E)(x) = \mathsf{forward}(\mu(x), E)
-\]
-\[
-\mathsf{backward}(\mu', E)(x) = \mathsf{backward}(\mu'(x), E)
-\]
-
-3. \textbf{For Errors}:\\
-Given $E = [op_1,...,op_m]$ in $d$, convert into $E'$ in $d'$:
-\[
-\mathsf{forward\_ops}(E) = [\mathsf{adjust}(op_1),...,\mathsf{adjust}(op_m)]
-\]
-where for $op = \mathsf{ins}(p,c), \mathsf{del}(p), \mathsf{sub}(p,c)$:
-\[
-\mathsf{adjust}(op_k) = 
-\begin{cases}
-\mathsf{ins}(p + \Delta_{\leq p}([op_1, ..., op_{k-1}]), c) \\
-\mathsf{del}(p + \Delta_{\leq p}([op_1, ..., op_{k-1}])) \\
-\mathsf{sub}(p + \Delta_{\leq p}([op_1, ..., op_{k-1}]), c)
-\end{cases}
-\]\\
-
-Now, the inverse process, convert d' into d:
-
-\[
-\mathsf{backward\_ops}(E') = [\mathsf{adjust}^{-1}(op'_1), \dots, \mathsf{adjust}^{-1}(op'_m)]
-\]
-
-where for each operation $op' =  \mathsf{ins}(p', c), \mathsf{del}(p'), \mathsf{sub}(p', c)$:
-
-\[
-\mathsf{adjust}^{-1}(op'_k) = 
-\begin{cases}
-\mathsf{ins}(p' - \Delta_{\leq p'}([op'_1, ..., op'_{k-1}]), c) \\
-\mathsf{del}(p' - \Delta_{\leq p'}([op'_1, ..., op'_{k-1}])) \\
-\mathsf{sub}(p' - \Delta_{\leq p'}([op'_1, ..., op'_{k-1}]), c)
-\end{cases}
-\]\\
-
-
-Finally, we can continue with the proof, now we have to prove both sides of the equivalence
-
-\subsubsection{$\llbracket R \rrbracket^{\leq k}_d \implies \llbracket R + k \rrbracket_d$}
-Given $(s, \mu, E) \in \llbracket R \rrbracket^{\leq k}_d$ we will map using the forward function:
-
-\[(s, \mu, E) \mapsto (\mathsf{forward}(s,E), \mathsf{forward}(\mu, E), \mathsf{forward\_ops}(E))\]
-
-\begin{enumerate}
-\item By definition, $\mathsf{apply}(d,E) \in \mathcal{L}(R)$
-\item Let $d' = \mathsf{apply}(d,E)$
-\item Note that $s' = \mathsf{forward}(s,E)$ is span of $d'$
-\item The forward mapping preserves captures moving the indices: $\mu'(x) = \mathsf{forward}(\mu(x), E)$
-\item Errors are moving to match the new document, $E' = \mathsf{forward\_ops}(E)$
-\item Thus $(s', \mu', E') \in \llbracket R + k \rrbracket_d$ because we know that $\mathsf{apply}(d,E) \in \mathcal{L}(R)$, so $(s', \mu') \in \llbracket R \rrbracket_d$
-\end{enumerate}
-
-\subsubsection{$\llbracket R + k \rrbracket_d \implies \llbracket R \rrbracket^{\leq k}_d$}
-Given $(s', \mu', E') \in \llbracket R + k \rrbracket_d$:
-\begin{enumerate}
-\item we have an $d' = \mathsf{apply}(d,E)$ that meets $(s', \mu') \in \llbracket R \rrbracket_{d'}$
-\item The inverse mapping recovers original positions:
-\begin{align*}
-s &= \mathsf{backward}(s', E) \\
-\mu(x) &= \mathsf{backward}(\mu'(x), E) \\
-E' &= \mathsf{backward\_ops}(E)\\
-\end{align*}
-\item The triple $(s, \mu, E')$ satisfies all conditions of $\llbracket R \rrbracket^{\leq k}_d$
-\end{enumerate}
-
-
-
-The equivalence requires:
-\begin{itemize}
-\item Identity preservation: $\mathsf{backward}(\mathsf{forward}(s,E),E) = s$
-\end{itemize}
+\subsubsection{$\llbracket R + k \rrbracket_d \implies \llbracket R ^{\leq k} \rrbracket_d$}	
+	Given $(\mu,E)\in \llbracket R + k\rrbracket_d$, then $E(\mu)\in\llbracket R\rrbracket_{E(d)}$ and $|E|\le k$.
+	Let $d' = E(d)$. Then $(E(\mu),E)\in \llbracket R^{\le k}\rrbracket_d$ by the modified-document semantics.
+	
+	
+\end{proof}
 
 
 
