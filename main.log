@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2026/dev/Arch Linux) (preloaded format=pdflatex 2025.10.5)  6 OCT 2025 15:52
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2026/dev/Arch Linux) (preloaded format=pdflatex 2025.11.18)  8 JAN 2026 09:32
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -33,7 +33,7 @@ Package: babel 2025/02/14 v25.4 The multilingual framework for pdfLaTeX, LuaLaT
 eX and XeLaTeX
 \babel@savecnt=\count270
 \U@D=\dimen142
-\l@unhyphenated=\language6
+\l@unhyphenated=\language3
 
 (/usr/share/texmf-dist/tex/generic/babel/txtbabel.def)
 \bbl@readstream=\read2
@@ -41,14 +41,23 @@ eX and XeLaTeX
 
 (/usr/share/texmf-dist/tex/generic/babel-spanish/spanish.ldf
 Language: spanish.ldf 2021/05/27 v5.0q Spanish support from the babel system
+
+
+Package babel Warning: No hyphenation patterns were preloaded for
+(babel)                the language 'Spanish' into the format.
+(babel)                Please, configure your TeX system to add them and
+(babel)                rebuild the format. Now I will use the patterns
+(babel)                preloaded for \language=0 instead on input line 51.
+
+Package babel Info: Hyphen rules for 'spanish' set to \l@english
+(babel)             (\language0). Reported on input line 52.
 \es@quottoks=\toks19
 \es@quotdepth=\count272
 Package babel Info: Making " an active character on input line 570.
 Package babel Info: Making . an active character on input line 675.
 Package babel Info: Making < an active character on input line 722.
 Package babel Info: Making > an active character on input line 722.
-))
-(/usr/share/texmf-dist/tex/generic/babel/locale/es/babel-spanish.tex
+)) (/usr/share/texmf-dist/tex/generic/babel/locale/es/babel-spanish.tex
 Package babel Info: Importing font and identification data for spanish
 (babel)             from babel-es.ini. Reported on input line 11.
 )
@@ -694,10 +703,21 @@ Underfull \hbox (badness 10000) in paragraph at lines 360--361
 
 
 [5]
+Overfull \hbox (39.0248pt too wide) detected at line 461
+\OML/cmm/m/it/10 op[]op[] [] []op[]; [] ; op[][]D;  \OT1/cmr/m/n/10 (\OML/cmm/
+m/it/10 op[]\OT1/cmr/m/n/10 )[]\OML/cmm/m/it/10 \OT1/cmr/m/n/10 (\OML/cmm/m/it
+/10 op[]\OT1/cmr/m/n/10 )\OML/cmm/m/it/10 :
+ []
+
+
 
 [6]
 
-[7] (./main.aux
+[7]
+
+[8]
+
+[9] (./main.aux
 LaTeX Info: Redefining \. on input line 8.
 LaTeX Info: Redefining \% on input line 8.
 )
@@ -707,12 +727,12 @@ L3 programming layer <2025-01-18>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 20072 strings out of 475109
- 423093 string characters out of 5765325
- 849297 words of memory out of 5000000
- 42734 multiletter control sequences out of 15000+600000
+ 20079 strings out of 475171
+ 423206 string characters out of 5767094
+ 849157 words of memory out of 5000000
+ 42733 multiletter control sequences out of 15000+600000
  570984 words of font info for 84 fonts, out of 8000000 for 9000
- 40 hyphenation exceptions out of 8191
+ 14 hyphenation exceptions out of 8191
  102i,14n,107p,910b,365s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/share/
 texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share/texmf-dist/fon
@@ -732,10 +752,10 @@ exmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texmf-dist/font
 s/type1/public/amsfonts/cm/cmtt10.pfb></usr/share/texmf-dist/fonts/type1/public
 /amsfonts/symbols/msbm10.pfb></usr/share/texmf-dist/fonts/type1/public/stmaryrd
 /stmary10.pfb>
-Output written on main.pdf (7 pages, 257496 bytes).
+Output written on main.pdf (9 pages, 269942 bytes).
 PDF statistics:
- 136 PDF objects out of 1000 (max. 8388607)
- 84 compressed objects within 1 object stream
+ 142 PDF objects out of 1000 (max. 8388607)
+ 88 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  13 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -333,7 +333,7 @@ is preserved across arbitrary edit sequences.
 
 \subsection{Undo edits}
 
-\paragraph{title}Note that, given a edit sequence $E$, a document $d$ and the document resulting from applying the edit sequence over $d$, $E(d) = d'$, we can easily undo de changes taking the inverse of each operation. We will write  $E^{-1}$ the inverse sequence of edits and it is defined as follow.
+\paragraph{}Note that, given a edit sequence $E$, a document $d$ and the document resulting from applying the edit sequence over $d$, $E(d) = d'$, we can easily undo de changes taking the inverse of each operation. We will write  $E^{-1}$ the inverse sequence of edits and it is defined as follow.
 
 For each atomic operation $op_i \in E$: 
 
@@ -431,6 +431,139 @@ In this formulation, the match is reported over the original document $d$, while
 %edits are accounted for only in the $\Sigma$-projection used to witness compatibility with $R$.
 
 
+\section{Canonical form for edit sequences}
+
+We define a canonical (normal) form for edit scripts so that equivalent scripts
+(those producing the same output on any input and inducing the same span
+transformations) admit a unique representative. This is crucial both for
+comparison and for interoperability with extraction semantics.
+
+\subsection{Equivalence}
+
+Two edit sequences $E$ and $E'$ are \emph{equivalent}, written $E \equiv E'$, if
+for every document $D$ we have $E(D)=E'(D)$ and, for every mapping $\mu$ over $D$,
+the induced mappings coincide: $E(\mu)=E'(\mu)$ (as defined in Section~\ref{sec:edit-application}).
+
+\subsection{Anchors and left-to-right discipline}
+
+Let $E=[op_1,\dots,op_m]$ be an edit sequence applied to $D$ from left to right.
+For each $t$, let $D^{(t)}$ be the document after applying $op_1,\dots,op_{t-1}$.
+We call the \emph{anchor} of $op_t$, denoted $\alpha(op_t)$, the index $p$ mentioned
+in $op_t$ but interpreted over the \emph{current} string $D^{(t)}$ (as in our operational
+semantics). Intuitively, $\alpha$ says “where in the current cursor the edit occurs”.
+
+A script is \emph{left-to-right} if the sequence of anchors never goes backwards
+after transporting them to the original coordinate system. Formally, define as follows: for $s<t$,
+\[
+op_s op_t \quad\text{iff}\quad
+\text{when replaying } op_1,\dots,op_{t-1} \text{ on } D,\ \alpha(op_s)
+\text{ refers to a position no greater than the transported } \alpha(op_t).
+\]
+Our canonical scripts will satisfy that the resulting order of operations is
+compatible with (no “jumping back” to earlier prefixes).
+
+\subsection{Local rewrite system}
+
+We define a terminating set of local rewrites that preserves equivalence
+($\equiv$). They act on adjacent operations whose anchors (in the current string)
+coincide at transformation time.
+
+\paragraph{Cancellation and fusion at the same anchor.}
+For any character $a,c\in\Sigma$:
+\begin{align*}
+	\mathrm{ins}(p,c);\ \mathrm{del}(p,c) &\;\Rightarrow\; \varepsilon \quad &&\text{(insertion immediately deleted)}\\
+	\mathrm{del}(p,a);\ \mathrm{ins}(p,c) &\;\Rightarrow\; \mathrm{sub}(p,a,c) \quad &&\text{(delete+insert = substitute)}\\
+	\mathrm{sub}(p,a,b);\ \mathrm{sub}(p,b,c) &\;\Rightarrow\; \mathrm{sub}(p,a,c) \quad &&\text{(collapse adjacent substitutions)}
+\end{align*}
+
+\paragraph{Precedence at the same anchor.}
+When two adjacent operations $op_1;op_2$ share the anchor and no rule above applies,
+we impose the following order (move left if needed):
+\[
+\mathrm{del} \ \prec\ \mathrm{sub} \ \prec\ \mathrm{ins}.
+\]
+In words: do all deletions \emph{first}, then at most one substitution, then insertions.
+This matches the intuition “consume input before producing output”.
+
+\paragraph{Commutation at different anchors.}
+If two consecutive operations act on disjoint anchors and swapping them does not
+change the transported anchors nor the result, we commute them to enforce the
+global left-to-right discipline (earlier anchor first). Concretely, whenever
+applying $op_1;op_2$ yields the same $D'$ and the same mapping action as $op_2;op_1$
+(after index transport), we rewrite to the order in which the transported anchor is smaller.
+
+\subsection{Canonical (normal) form}
+
+A script $E$ is in \emph{canonical form} if:
+\begin{enumerate}
+	\item (\textbf{Left-to-right}) Its operation order is compatible with the transported
+	anchor order (no backward jumps to earlier prefixes).
+	\item (\textbf{Local normality}) No local rule above applies:
+	there are no cancellable $\mathrm{ins};\mathrm{del}$ pairs, no adjacent substitutions to merge,
+	and the precedence at each anchor is $\mathrm{del}^*;\mathrm{sub}^{\le 1};\mathrm{ins}^*$.
+\end{enumerate}
+
+\begin{theorem}[Termination]
+	The rewrite system above terminates. 
+\end{theorem}
+\begin{proof}[Proof sketch]
+	Use a multivariate measure that strictly decreases on each rewrite:
+	(i) the number of precedence violations at equal anchors,
+	(ii) the number of cancellable or fusible adjacent pairs,
+	(iii) the number of anchor order inversions after transport,
+	(iv) the total length of the script. Each rule reduces the lexicographic tuple.
+\end{proof}
+
+\begin{theorem}[Confluence up to $\equiv$]
+	Any two rewrite sequences from the same script yield $\equiv$-equivalent normal forms.
+\end{theorem}
+\begin{proof}[Proof sketch]
+	Overlaps occur only at length-2 windows around the same anchor; all critical pairs
+	are joinable because all outcomes produce the same character at that anchor and the
+	same span-transport effect (by construction of the rules). For disjoint anchors, 
+	commutation preserves both $E(D)$ and $E(\mu)$.
+\end{proof}
+
+\begin{theorem}[Uniqueness of canonical form]
+	Every script $E$ has a unique canonical representative $\mathrm{NF}(E)$ modulo $\equiv$.
+\end{theorem}
+
+\subsection{DP-based construction with deterministic tie-breaking}
+
+In practice, we build canonical scripts from the Wagner–Fischer DP table.
+Let $D$ and $D'$ be the input and target strings, and let moves be:
+diagonal $=$ match/substitution, up $=$ deletion, left $=$ insertion.
+Among all optimal paths, choose the lexicographically smallest under
+\[
+\texttt{diag} \ \prec\ \texttt{up} \ \prec\ \texttt{left},
+\]
+breaking ties by preferring to move \emph{towards smaller input indices first}
+(i.e., at a tie between \texttt{up} and \texttt{left}, pick \texttt{up}).
+This ensures that, at each input position, we first delete, then possibly substitute,
+and finally insert---matching our local precedence.
+
+We then emit the operation stream by scanning the chosen path forward:
+\begin{itemize}
+	\item \texttt{diag} with equal symbols $\Rightarrow$ no-op;
+	\item \texttt{diag} with different symbols $\Rightarrow\ \mathrm{sub}(p,a,c)$;
+	\item \texttt{up} $\Rightarrow\ \mathrm{del}(p,a)$ (consume $a$ at $p$);
+	\item \texttt{left} $\Rightarrow\ \mathrm{ins}(p,c)$ (produce $c$ at $p$).
+\end{itemize}
+Finally, run the local rewrites to saturation (linear time in the script length due to the local nature of rules).
+The result is in canonical form by construction.
+
+\paragraph{Complexity.}
+DP takes $O(|D|\cdot|D'|)$ time; the emitted script has length at most that distance.
+Normalization is $O(|E|)$.
+
+\subsection{Interaction with span transport}
+The precedence $\mathrm{del}\prec\mathrm{sub}\prec\mathrm{ins}$ preserves a clean “consume then produce”
+discipline: insertions do not shift yet-unprocessed spans to the left,
+and deletions shift only what lies strictly to their right.
+Therefore, the mapping-transport rules in Section~\ref{sec:edit-application}
+coincide across all equivalent scripts and are preserved by normalization.
+In particular, if $(\mu,E)$ is a match under the original-document semantics,
+then $(\mu,\mathrm{NF}(E))$ is an equivalent match with a canonical script.
 
 \subsubsection{Example}
 
