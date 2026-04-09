@@ -12,9 +12,30 @@ Let $d = a_0 a_1 \cdots a_{n-1} \in \Sigma^*$ be a document. We consider the sta
 	\item \emph{Substitution}, denoted $\sub(p,c)$, which replaces the symbol at position $p$ by $c \in \Sigma$, where $0 \le p < n$.
 \end{itemize}
 
+\cristian{
+$\ins_{i,c}: \Sigma^* \rightarrow \Sigma^*$
+
+$\ins_{i,c}(a_1 \ldots a_n) = a_1 \ldots a_{i-1} c a_i \ldots a_n$
+
+$\del_{i}$
+
+$\sub_{i,c}$
+}
+\cristian{Decir que pasa con $i$ cuando no es el tamaño de la palabra.}
+
 These operations are interpreted over the current version of the document at the moment they are applied. Thus, the order in which edits are performed matters.
 
 \subsection{Edit scripts and edit distance}
+
+\cristian{
+$\operatorname{Edits} = \{\ins_{i,c} \mid i, c\} \cup
+\{\del_i \mid i\} \cup
+\{\sub_{i,c}\}$
+
+$E = e_1 \ldots e_k \in \operatorname{Edits}$
+
+$E(w) = e_k(\ldots e_2(e_1(w)) \ldots )$
+}
 
 An \emph{edit script} is a finite sequence
 \[
@@ -27,6 +48,8 @@ of atomic edit operations. The action of $E$ on a document $d$ is defined recurs
 [op_1,\dots,op_m](d) = [op_2,\dots,op_m](op_1(d)).
 \]
 
+\cristian{Yo cambiaría $\emptyset = \epsilon$}
+
 Equivalently, if $E = [op_1,\dots,op_m]$, then $E(d)$ is the document obtained after applying the operations from left to right.
 
 The \emph{edit distance} between two documents $d,d' \in \Sigma^*$, denoted by $\Delta(d,d')$, is the minimum length of an edit script $E$ such that
@@ -38,6 +61,12 @@ We write $|E|$ for the number of operations in $E$. By definition,
 \[
 \Delta(d,d') = \min \{\, |E| \mid E(d)=d' \,\}.
 \]
+\cristian{Buscar otra notación para $\Delta$.
+
+$\operatorname{edist}$
+
+$\operatorname{dist}$
+}
 
 \paragraph{Example.}
 If $d=\mathtt{a}$, then the script
@@ -47,6 +76,8 @@ E=[\ins(1,\mathtt{b}),\ins(2,\mathtt{c})]
 satisfies $E(d)=\mathtt{abc}$, and therefore $\Delta(\mathtt{a},\mathtt{abc}) \le 2$.
 
 \subsection{Transporting mappings through edit scripts}
+
+\cristian{Actualizar la notación pensando $\ins$, $\del$ y $\sub$ como funciones de $\Sigma^*$ a $\Sigma^*$.}
 
 Since our extraction results are mappings from variables to spans, we also need to specify how edits affect captured spans.
 
@@ -79,7 +110,7 @@ For substitutions, the span is unchanged:
 
 These operations extend pointwise to mappings. If $x \in \dom(\mu)$ and $\mu(x)=\Span{i,j}$, then
 \[
-op(\mu)(x) = op(\Span{i,j}).
+[op(\mu)](x) = op(\Span{i,j}).
 \]
 Thus, $op(\mu)$ is obtained by transporting every captured span according to the positional effect of $op$.
 
@@ -97,6 +128,7 @@ is an edit script, its action on mappings is defined recursively by
 Intuitively, $E(\mu)$ is the mapping obtained by relocating the spans of $\mu$ so that they remain consistent with the edited document $E(d)$.
 
 \subsection{Inverse edit scripts}
+\cristian{Definir la inversa de cada operación formalmente. Decir que, sobre spans, todas las funciones tienen inversa.}
 
 Every atomic edit operation has a natural inverse. Insertions are undone by deletions, deletions are undone by insertions, and substitutions are undone by restoring the original symbol. Accordingly, if
 \[

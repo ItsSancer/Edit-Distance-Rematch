@@ -5,6 +5,8 @@ We now introduce two semantics for information extraction with errors. Both sema
 
 \subsection{Extraction over edited documents}
 
+\cristian{Cambiar esta definición a un span $S$.}
+
 The first semantics evaluates the automaton over a document obtained after applying an edit script to the input. The extracted mapping is therefore interpreted over the edited document.
 
 \begin{definition}
@@ -24,12 +26,15 @@ The first semantics evaluates the automaton over a document obtained after apply
 
 In this semantics, the script $E$ witnesses how the input document is modified, while the mapping $\mu$ is computed directly on the resulting document $E(d)$. Thus, the spans appearing in $\mu$ refer to coordinates of the edited document.
 
-\paragraph{Remark.}
+\paragraph{Remark}
 This is the most direct way of extending exact extraction to the approximate setting: we ask whether there exists an edited version of the input that satisfies the query, and if so, we return a match over that edited document together with the corresponding edit witness.
 
 \subsection{Extraction over the original document}
 
 The second semantics still uses an edit script to witness how the input can be repaired, but reports the match over the original document rather than over the edited one. For this, we use the action of edit scripts on mappings introduced in Section~\ref{sec:edit-distance}.
+
+\cristian{Cambiar esta definición según lo que discutimos en la pizarra.}
+\cristian{Agregar ejemplos.}
 
 \begin{definition}
 	Let $\mathcal{A}$ a variable-set automaton, let $d \in \Sigma^*$, and let $k \in \mathbb{N}$. The \emph{original-document semantics} of $\mathcal{A}$ over $d$ with error budget $k$ is
