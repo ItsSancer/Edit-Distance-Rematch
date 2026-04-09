@@ -1,0 +1,7 @@
+%!TEX root = ../main/main.tex
+
+\begin{abstract}
+
+We study regex-based information extraction in the presence of errors. We consider two natural semantics for extraction with edit operations: In the first one, matches are computed over a modified document obtained from the original input by a bounded sequence of insertions, deletions, and substitutions; In the second one, matches are reported over the original document together with an edit script witnessing how the input can be transformed to satisfy the query. We formalize both semantics and define how edit operations act on spans and mappings, so that extracted information remains positionally consistent across document transformations. Our main result is a bijective correspondence between the matches produced by the two semantics, showing that they are equivalent under consistent index transformations. This equivalence provides a formal foundation for interoperating between systems that reason over edited documents and systems that report extractions over the original input.
+
+\end{abstract}

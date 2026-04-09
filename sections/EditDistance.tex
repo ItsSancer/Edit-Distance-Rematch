@@ -1,0 +1,110 @@
+%!TEX root = ../main/main.tex
+
+To model extraction under errors, we consider documents that may differ from an ideal match by a bounded number of edit operations. In this section we define the edit model that will be used throughout the paper, both at the level of documents and at the level of extracted mappings.
+
+
+\subsection{Edit operations}
+
+Let $d = a_0 a_1 \cdots a_{n-1} \in \Sigma^*$ be a document. We consider the standard atomic edit operations:
+\begin{itemize}
+	\item \emph{Insertion}, denoted $\ins(p,c)$, which inserts the symbol $c \in \Sigma$ at position $p$, where $0 \le p \le n$;
+	\item \emph{Deletion}, denoted $\del(p)$, which deletes the symbol currently stored at position $p$, where $0 \le p < n$;
+	\item \emph{Substitution}, denoted $\sub(p,c)$, which replaces the symbol at position $p$ by $c \in \Sigma$, where $0 \le p < n$.
+\end{itemize}
+
+These operations are interpreted over the current version of the document at the moment they are applied. Thus, the order in which edits are performed matters.
+
+\subsection{Edit scripts and edit distance}
+
+An \emph{edit script} is a finite sequence
+\[
+E = [op_1,\dots,op_m]
+\]
+of atomic edit operations. The action of $E$ on a document $d$ is defined recursively by
+\[
+\emptyset(d) = d,
+\qquad
+[op_1,\dots,op_m](d) = [op_2,\dots,op_m](op_1(d)).
+\]
+
+Equivalently, if $E = [op_1,\dots,op_m]$, then $E(d)$ is the document obtained after applying the operations from left to right.
+
+The \emph{edit distance} between two documents $d,d' \in \Sigma^*$, denoted by $\Delta(d,d')$, is the minimum length of an edit script $E$ such that
+\[
+E(d)=d'.
+\]
+
+We write $|E|$ for the number of operations in $E$. By definition,
+\[
+\Delta(d,d') = \min \{\, |E| \mid E(d)=d' \,\}.
+\]
+
+\paragraph{Example.}
+If $d=\mathtt{a}$, then the script
+\[
+E=[\ins(1,\mathtt{b}),\ins(2,\mathtt{c})]
+\]
+satisfies $E(d)=\mathtt{abc}$, and therefore $\Delta(\mathtt{a},\mathtt{abc}) \le 2$.
+
+\subsection{Transporting mappings through edit scripts}
+
+Since our extraction results are mappings from variables to spans, we also need to specify how edits affect captured spans.
+
+Let $\mu$ be a mapping over a document $d$, and suppose that $\mu(x)=[i,j\rangle$. For an atomic edit operation $op$, we define the transported span $op(\Span{i,j})$ as follows.
+
+For insertions, we set
+\[
+\ins(p,c)(\Span{1,j})=
+\begin{cases}
+	\Span{i+1,j+1} & \text{if } p \le i,\\
+	\Span{i,j+1} & \text{if } i < p \le j,\\
+	\Span{i,j} & \text{if } j < p.
+\end{cases}
+\]
+
+For deletions, we set
+\[
+\del(p)(\Span{i,j})=
+\begin{cases}
+	\Span{i-1,j-1} & \text{if } p < i,\\
+	\Span{i,j-1} & \text{if } i \le p < j,\\
+	\Span{i,j} & \text{if } j \le p.
+\end{cases}
+\]
+
+For substitutions, the span is unchanged:
+\[
+\sub(p,c)(\Span{i,j}) = \Span{i,j}.
+\]
+
+These operations extend pointwise to mappings. If $x \in \dom(\mu)$ and $\mu(x)=\Span{i,j}$, then
+\[
+op(\mu)(x) = op(\Span{i,j}).
+\]
+Thus, $op(\mu)$ is obtained by transporting every captured span according to the positional effect of $op$.
+
+Finally, if
+\[
+E=[op_1,\dots,op_m]
+\]
+is an edit script, its action on mappings is defined recursively by
+\[
+\emptyset(\mu)=\mu,
+\qquad
+[op_1,\dots,op_m](\mu) = [op_2,\dots,op_m](op_1(\mu)).
+\]
+
+Intuitively, $E(\mu)$ is the mapping obtained by relocating the spans of $\mu$ so that they remain consistent with the edited document $E(d)$.
+
+\subsection{Inverse edit scripts}
+
+Every atomic edit operation has a natural inverse. Insertions are undone by deletions, deletions are undone by insertions, and substitutions are undone by restoring the original symbol. Accordingly, if
+\[
+E=[op_1,\dots,op_m],
+\]
+we define its inverse script by
+\[
+E^{-1} = [op_m^{-1},\dots,op_1^{-1}].
+\]
+
+Whenever $E(d)=d'$, the script $E^{-1}$ transforms $d'$ back into $d$. In the same way, inverse edit scripts allow us to transport mappings from the edited document back to the original one. This operation will be essential when relating the two semantics for information extraction with errors introduced in the next section.

@@ -1,0 +1,64 @@
+%!TEX root = ../main/main.tex
+
+
+We now introduce two semantics for information extraction with errors. Both semantics associate to $d$ a set of pairs $(\mu,E)$, where $E$ is an edit script with $|E| \leq k$. The difference between them lies in the document over which the mapping $\mu$ is interpreted. In the first semantics, $\mu$ is a mapping over the edited document $E(d)$. In the second semantics, $\mu$ is a mapping over the original document $d$.
+
+\subsection{Extraction over edited documents}
+
+The first semantics evaluates the automaton over a document obtained after applying an edit script to the input. The extracted mapping is therefore interpreted over the edited document.
+
+\begin{definition}
+	Let $\mathcal{A}$ be a variable-set automaton, let $d \in \Sigma^*$, and let $k \in \mathbb{N}$. The \emph{edited-document semantics} of $\mathcal{A}$ over $d$ with error budget $k$ is
+	\[
+	\llbracket \mathcal{A} \rrbracket^{\mathsf{edit}}_{\leq k}(d)
+	=
+	\left\{
+	(\mu,E)
+	\;\middle|\;
+	|E| \leq k
+	\text{ and }
+	\mu \in \llbracket \mathcal{A} \rrbracket(E(d))
+	\right\}.
+	\]
+\end{definition}
+
+In this semantics, the script $E$ witnesses how the input document is modified, while the mapping $\mu$ is computed directly on the resulting document $E(d)$. Thus, the spans appearing in $\mu$ refer to coordinates of the edited document.
+
+\paragraph{Remark.}
+This is the most direct way of extending exact extraction to the approximate setting: we ask whether there exists an edited version of the input that satisfies the query, and if so, we return a match over that edited document together with the corresponding edit witness.
+
+\subsection{Extraction over the original document}
+
+The second semantics still uses an edit script to witness how the input can be repaired, but reports the match over the original document rather than over the edited one. For this, we use the action of edit scripts on mappings introduced in Section~\ref{sec:edit-distance}.
+
+\begin{definition}
+	Let $\mathcal{A}$ a variable-set automaton, let $d \in \Sigma^*$, and let $k \in \mathbb{N}$. The \emph{original-document semantics} of $\mathcal{A}$ over $d$ with error budget $k$ is
+	\[
+	\llbracket \mathcal{A} \rrbracket^{\mathsf{orig}}_{\leq k}(d)
+	=
+	\left\{
+	(\mu,E)
+	\;\middle|\;
+	|E| \leq k
+	\text{ and }
+	E(\mu) \in \llbracket \mathcal{A} \rrbracket(E(d))
+	\right\}.
+	\]
+\end{definition}
+
+In other words, a pair $(\mu,E)$ belongs to the original-document semantics if, after transporting $\mu$ through the edit script $E$, the resulting mapping becomes a valid extraction over the edited document $E(d)$.
+
+Equivalently, one may view this semantics as follows: a mapping $\mu$ over the original document is valid if there exists a mapping $\mu'$ over $E(d)$ such that
+\[
+\mu' = E(\mu)
+\qquad\text{and}\qquad
+\mu' \in \llbracket \mathcal{A} \rrbracket(E(d)).
+\]
+Thus, the extracted spans are anchored in the original document, while the edit script explains how the document must be modified for the extraction to succeed.
+
+
+\subsection{Discussion}
+
+The edited-document semantics is conceptually closer to approximate matching: it asks whether the automaton can match a corrected version of the input, and returns the corresponding extraction over that corrected document. By contrast, the original-document semantics is more suitable when one wishes to report results directly over the source text seen by the user.
+
+This distinction suggests a useful separation between internal computation and external presentation. A system may compute approximate extractions using one semantics internally, while exposing results under either semantics depending on the intended application. The main result of this paper will show that this is possible without loss of information: the two semantics are equivalent up to a natural translation of mappings along edit scripts.
