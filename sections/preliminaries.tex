@@ -3,12 +3,12 @@
 
 \subsection{Documents, spans, and mappings}
 
-\paragraph{Document and spans} A \emph{document} $d$ is a string over a finit alphabet $\Sigma$, we write $d= a_0a_2...a_{n-1}$ to denote a document of legth $|d| = n$. A span over a document $d$ is a pair $s = \Span{i,j}$ of natural numbers $i$ and $j$ with $0 \leq i \leq j \leq |d|$. $s$ is associated with a substring of $d$ from position $i$ to position $j-1$. We denote this substring by $d(s)$. Given two spans $s_1 = \Span{i_1, j_1}$ and $s_2 = \Span{i_2, j_2}$, the concatenation of $s_1$ and $s_2$ is defined as $s_1 \cdot s_2 = \Span{i_1, j_2}$, whenever $j_1 = i_2$.
+\paragraph{Document and spans} A \emph{document} $d$ is a string over a finit alphabet $\Sigma$, we write $d= a_1a_2...a_{n}$ to denote a document of legth $|d| = n$. A span over a document $d$ is a pair $s = \Span{i,j}$ of natural numbers $i$ and $j$ with $0 \leq i \leq j \leq |d| + 1$. $s$ is associated with a substring of $d$ from position $i$ to position $j-1$. We denote this substring by $d(s)$. Given two spans $s_1 = \Span{i_1, j_1}$ and $s_2 = \Span{i_2, j_2}$, the concatenation of $s_1$ and $s_2$ is defined as $s_1 \cdot s_2 = \Span{i_1, j_2}$, whenever $j_1 = i_2$.
 We write $\mathrm{span}(d)$ for the set of all spans of $d$.
 
 \paragraph{Mappings} Let $V$ be a fixed set of variables, disjoint from $\Sigma$. A \textit{mapping} is a function $\mu$ from a finite set of variables $dom(\mu) \subseteq V$ to spans. The empty mapping, denoted by $\varnothing$, is the only mapping such that $dom(\varnothing) = \varnothing$. Similarly, $[x \xrightarrow{} s]$ denotes the mapping whose domain only cointains the variable $x$, which it assign to span $s$.
 
-\paragraph{Document spanners} A document spanner is a function that maps every document $d$ to a set of mappings $M$ such that the range of each $\mu \in M$ are spans of $d$—thus modeling the process of extracting the information (in form of mappings) from $d$. For this goal, we will work with one model for defining spanners: variable-set automata.
+\paragraph{Document spanners} A document spanner is a function $S$ that maps every document $d \in \Sigma^*$ to a set $S(d)$ of mappings over $d$, such that the range of each $\mu \in S(d)$ are spans of $d$—thus modeling the process of extracting the information (in form of mappings) from $d$. For this goal, we will work with one model for defining spanners: variable-set automata.
 
 \cristian{Usar una notación para document spanners $S$.
 	
@@ -18,13 +18,40 @@ $S(d)$ conjunto de mappings sobre $d$.}
 \subsection{Variable-set automata.} 
 A \textit{variable-set automaton}(VA) can be understood as an $\epsilon$-NFA that is extended with capture variables; that is, it behaves a usual finite state automaton with $\epsilon-$transitions, except it can also open and close variables. Formally, a VA $\mathcal{A}$ is tuple $(Q, \Sigma, V, q_0, F, \delta )$ Q is a finite set of states, V is a finite set of variables, $q_0 \in Q$ is an initial state, $F \subseteq Q$ is a set of final states and $\delta$ is a transition relation consisting of letter transitions of the form $(q, a, q')$ and variable transition of the form $(q, \ox, q')$ or $(q, \cx, q')$, where $q, q' \in Q$, $a \in \Sigma$ and $x \in V$. The $\ox$ and $\cx$ are special symbols to denote the opening or closing of a variable x. We define the set $\Vars(\mathcal{A})$ as the set of all variables that occur in $\mathcal{A}$.
 
-A configuration of a VA $\mathcal{A}$ over a document $d = a_0 a_1 ... a_{n-1}$ is a tuple $(q, i)$, where $q \in Q$ is the current state and $i \leq n$ is the current position in the document. A run $\rho$ of $\mathcal{A}$ is sequence of the form: 
-\[
-\rho := (q_0, i_0) \xrightarrow[]{o_0}(q_1, i_1) \xrightarrow[]{o_1} \cdots \xrightarrow[]{o_{n-1}} (q_{n-1}, i_{n-1})
-\]
-where $o_i \in \Sigma \cup \{\ox, \cx\; | \; x \in V\}$ and $(q_i, o_{i+1}, q_{i+1})$. Moreover, $i_0...i_{n-1}$ is a non-decreasing sequence such that $i_0 = 0$ and $i_{n-1} = |d|$, and $i_{j+1} = i_j + 1$ if $o_{j+1} \in \Sigma$ and $i_{n-1} = i_{j}$ otherwise. 
+A configuration of a VA $\mathcal{A}$ over a document 
+$d = a_1 a_2 \cdots a_n$ is a pair $(q,i)$, where $q \in Q$ is the current state and 
+$i \in \{1,\ldots,n+1\}$ is the current position in the document. 
+Intuitively, $i$ is the position of the next symbol to be read, and $n+1$ represents the end of the document.
 
-Let $\mathcal{A} = (Q, \Sigma, V, q_0, F, \delta)$ be a VA and $d = a_0 a_1 \dots a_{n-1} \in \Sigma^*$ a document.
+A run $\rho$ of $\mathcal{A}$ over $d$ is a sequence of the form
+\[
+\rho :=
+(q_0,i_0)
+\xrightarrow{o_1}
+(q_1,i_1)
+\xrightarrow{o_2}
+\cdots
+\xrightarrow{o_m}
+(q_m,i_m),
+\]
+where, for every $1 \leq \ell \leq m$, $o_\ell \in \Sigma \cup \{\ox,\cx \mid x \in V\}$ and $(q_{\ell-1}, o_\ell, q_\ell) \in \delta$
+
+The sequence of positions $i_0,\ldots,i_m$ is non-decreasing, with $i_0=1$. 
+Moreover, for every $1 \leq \ell \leq m$:
+\[
+i_\ell =
+\begin{cases}
+	i_{\ell-1}+1, & \text{if } o_\ell \in \Sigma,\\
+	i_{\ell-1}, & \text{if } o_\ell \in \{\ox,\cx \mid x \in V\}.
+\end{cases}
+\]
+In the first case, when $o_\ell \in \Sigma$, we additionally require that $i_{\ell-1} \leq n$ and 
+\[
+o_\ell = a_{i_{\ell-1}}.
+\]
+Thus, letter transitions consume the current symbol and advance the position by one, whereas variable transitions do not consume any symbol.
+
+Let $\mathcal{A} = (Q, \Sigma, V, q_0, F, \delta)$ be a VA and $d = a_1 a_2 \dots a_{n} \in \Sigma^*$ a document.
 The semantics of $\mathcal{A}$ is a spanner 
 $\llbracket \mathcal{A} \rrbracket$ 
 that maps $d$ to the set of mappings obtained from all accepting runs of  $d$ on $\mathcal{A}$. Each run $\rho$ induces a mapping $\mu_\rho$ defined by:

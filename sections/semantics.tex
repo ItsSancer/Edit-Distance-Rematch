@@ -1,69 +1,323 @@
 %!TEX root = ../main/main.tex
 
 
-We now introduce two semantics for information extraction with errors. Both semantics associate to $d$ a set of pairs $(\mu,E)$, where $E$ is an edit script with $|E| \leq k$. The difference between them lies in the document over which the mapping $\mu$ is interpreted. In the first semantics, $\mu$ is a mapping over the edited document $E(d)$. In the second semantics, $\mu$ is a mapping over the original document $d$.
+We now introduce two semantics for information extraction with errors. 
+Let $S$ be a document spanner. 
+Given a document $d$ and an error budget $k$, both semantics consider edit scripts $E$ with $|E|\leq k$ and evaluate $S$ over the edited document $E(d)$. 
+The difference between them lies in the coordinates in which the extracted mappings are reported. 
+In the first semantics, mappings are reported over the edited document $E(d)$. 
+In the second semantics, mappings are transported back and reported over the original document $d$.
+
 
 \subsection{Extraction over edited documents}
 
 \cristian{Cambiar esta definición a un span $S$.}
 
-The first semantics evaluates the automaton over a document obtained after applying an edit script to the input. The extracted mapping is therefore interpreted over the edited document.
+The first semantics evaluates the spanner over a document obtained after applying an edit script to the input. 
+The extracted mapping is therefore interpreted over the edited document.
 
 \begin{definition}
-	Let $\mathcal{A}$ be a variable-set automaton, let $d \in \Sigma^*$, and let $k \in \mathbb{N}$. The \emph{edited-document semantics} of $\mathcal{A}$ over $d$ with error budget $k$ is
+	Let $S$ be a document spanner, let $d \in \Sigma^*$, and let $k \in \mathbb{N}$. 
+	The \emph{edited-document semantics} of $S$ over $d$ with error budget $k$ is
 	\[
-	\llbracket \mathcal{A} \rrbracket^{\mathsf{edit}}_{\leq k}(d)
+	\llbracket S^{\mathsf{edit}}_{\leq k} \rrbracket (d)
 	=
 	\left\{
 	(\mu,E)
 	\;\middle|\;
-	|E| \leq k
+	E \in \operatorname{Edits}^*,\ 
+	|E| \leq k,
 	\text{ and }
-	\mu \in \llbracket \mathcal{A} \rrbracket(E(d))
+	\mu \in \llbracket S \rrbracket (E(d))
 	\right\}.
 	\]
 \end{definition}
 
-In this semantics, the script $E$ witnesses how the input document is modified, while the mapping $\mu$ is computed directly on the resulting document $E(d)$. Thus, the spans appearing in $\mu$ refer to coordinates of the edited document.
+
+In this semantics, the script $E$ witnesses how the input document is modified, while the mapping $\mu$ is computed directly on the resulting document $E(d)$. 
+Thus, the spans appearing in $\mu$ refer to positions of the edited document.
 
 \paragraph{Remark}
-This is the most direct way of extending exact extraction to the approximate setting: we ask whether there exists an edited version of the input that satisfies the query, and if so, we return a match over that edited document together with the corresponding edit witness.
+This is the most direct way of extending exact extraction to the approximate setting: we ask whether there exists an edited version of the input document that satisfies the spanner, and if so, we return a mapping over that edited document together with the corresponding edit script.
 
 \subsection{Extraction over the original document}
-
-The second semantics still uses an edit script to witness how the input can be repaired, but reports the match over the original document rather than over the edited one. For this, we use the action of edit scripts on mappings introduced in Section~\ref{sec:edit-distance}.
-
 \cristian{Cambiar esta definición según lo que discutimos en la pizarra.}
 \cristian{Agregar ejemplos.}
 
+\subsection{Extraction over the original document}
+
+The second semantics also evaluates the spanner over an edited version of the input document. 
+However, in this case, the extracted mappings are transported back to the original document by using the inverse transport induced by the edit script.
+
 \begin{definition}
-	Let $\mathcal{A}$ a variable-set automaton, let $d \in \Sigma^*$, and let $k \in \mathbb{N}$. The \emph{original-document semantics} of $\mathcal{A}$ over $d$ with error budget $k$ is
+	Let $S$ be a document spanner, let $d \in \Sigma^*$, and let $k \in \mathbb{N}$. 
+	The \emph{original-document semantics} of $S$ over $d$ with error budget $k$ is
 	\[
-	\llbracket \mathcal{A} \rrbracket^{\mathsf{orig}}_{\leq k}(d)
+	\llbracket S^{\mathsf{orig}}_{\leq k} \rrbracket (d)
 	=
 	\left\{
-	(\mu,E)
+	(E^{-1}(\mu),E)
 	\;\middle|\;
-	|E| \leq k
+	E \in \operatorname{Edits}^*,\
+	|E| \leq k,
 	\text{ and }
-	E(\mu) \in \llbracket \mathcal{A} \rrbracket(E(d))
+	\mu \in \llbracket S \rrbracket (E(d))
 	\right\}.
 	\]
 \end{definition}
 
-In other words, a pair $(\mu,E)$ belongs to the original-document semantics if, after transporting $\mu$ through the edit script $E$, the resulting mapping becomes a valid extraction over the edited document $E(d)$.
+In this semantics, the spanner is evaluated over the edited document $E(d)$, but the resulting mapping $\mu$ is not reported in the coordinates of $E(d)$. 
+Instead, $\mu$ is transported backwards through the edit script $E$, and the returned mapping $E^{-1}(\mu)$ refers to spans of the original document $d$.
 
-Equivalently, one may view this semantics as follows: a mapping $\mu$ over the original document is valid if there exists a mapping $\mu'$ over $E(d)$ such that
+Thus, while $S^{\mathsf{edit}}_{\leq k}(d)$ reports mappings over edited documents, $S^{\mathsf{orig}}_{\leq k}(d)$ reports mappings over the original input document.
+
+\subsubsection{Examples}
+	
+\textbf{ without edits.}
 \[
-\mu' = E(\mu)
-\qquad\text{and}\qquad
-\mu' \in \llbracket \mathcal{A} \rrbracket(E(d)).
+d=\mathtt{ab}.
 \]
-Thus, the extracted spans are anchored in the original document, while the edit script explains how the document must be modified for the extraction to succeed.
+The spanner
+\[
+x\{y\{\mathtt{a}\}\mathtt{b}\}
+\]
+corresponds to the mapping
+\[
+\mu =
+[
+x \mapsto \Span{1,3},
+y \mapsto \Span{1,2}
+].
+\]
+In this case, $E = \epsilon$, that means $E^{-1}(\mu)= \epsilon (\mu) = \mu$
 
 
-\subsection{Discussion}
+\noindent	
+\textbf{Substitution inside an extracted span.}
+	
+\[
+d=\mathtt{ac},
+\]
+and edit script
+\[
+E=\sub_{2,\mathtt{b}}
+\]
+same spanner as last example.
+Corresponds to the mapping
+\[
+\mu =
+[
+x \mapsto \Span{1,3},
+y \mapsto \Span{1,2}
+].
+\]
 
-The edited-document semantics is conceptually closer to approximate matching: it asks whether the automaton can match a corrected version of the input, and returns the corresponding extraction over that corrected document. By contrast, the original-document semantics is more suitable when one wishes to report results directly over the source text seen by the user.
+In this case $E$ only have a substitution, so $E^{-1}(\mu) = \mu$ wich is correct.
 
-This distinction suggests a useful separation between internal computation and external presentation. A system may compute approximate extractions using one semantics internally, while exposing results under either semantics depending on the intended application. The main result of this paper will show that this is possible without loss of information: the two semantics are equivalent up to a natural translation of mappings along edit scripts.
+\noindent
+\textbf{Insertion inside an extracted span.}
+
+	\[
+	d=\mathtt{ac}
+	\]
+the spanner extracts
+\[
+x\{\mathtt{a}\,y\{\mathtt{b}\}\,\mathtt{c}\}.
+\]
+	and edit script
+	\[
+	E=\ins_{2,\mathtt{b}}.
+	\]
+	Then
+	\[
+	E(d)=\mathtt{abc}.
+	\]
+
+	That is,
+	\[
+	\mu =
+	[
+	x \mapsto \Span{1,4},
+	y \mapsto \Span{2,3}
+	]
+	\]
+	over the edited document $\mathtt{abc}$.
+	
+	Since the edit inserted $\mathtt{b}$ at position $2$, the inverse transport removes position reduce by one the upper limit of the spans 
+	Thus,
+	\[
+	E^{-1}(\mu)
+	=
+	[
+	x \mapsto \Span{1,3},
+	y \mapsto \Span{2,2}
+	].
+	\]
+ the variable $x$ captures the whole document, while $y$ becomes an empty span between $\mathtt{a}$ and $\mathtt{c}$.
+
+\[
+\text{edited: } x\{\mathtt{a}\,y\{\mathtt{b}\}\,\mathtt{c}\}
+\qquad
+\leadsto
+\qquad
+\text{original: } x\{\mathtt{a}\,y\{\epsilon\}\,\mathtt{c}\}.
+\]
+	
+\noindent
+\textbf{Insertion inside one span but outside another.}
+
+\[
+d=\mathtt{ac}
+\]
+the spanner extracts
+\[
+x\{\mathtt{a}\mathtt{b}\,y\{\mathtt{c}\}\}.
+\]
+then
+\[
+E=\ins_{2,\mathtt{b}}.
+\]
+Then $E(d)=\mathtt{abc}$. the mapping looks like:
+\[
+\mu =
+[
+x \mapsto \Span{1,4},
+y \mapsto \Span{3,4}
+].
+\]
+After transporting back through $E^{-1}$, we get
+\[
+E^{-1}(\mu)
+=
+[
+x \mapsto \Span{1,3},
+y \mapsto \Span{2,3}
+]
+\]
+So $x$ captures the whole original document $\mathtt{ac}$, while $y$ captures only $\mathtt{c}$.
+
+	
+\noindent
+\textbf{Deletion inside an extracted span.}
+Let
+\[
+d=\mathtt{abbc}
+\]
+same spanner as before, consider the edit script
+\[
+E=\del_2.
+\]
+Then
+\[
+E(d)=\mathtt{abc}
+\]
+
+Thus,
+\[
+\mu =
+[
+x \mapsto \Span{1,4},
+y \mapsto \Span{3,4}
+]
+\]
+over $\mathtt{abc}$.
+	
+Since the original edit deleted the symbol at position $2$, the inverse transport behaves like inserting a position back at position $2$. 
+Therefore,
+\[
+E^{-1}(\mu)
+=
+[
+x \mapsto \Span{1,5},
+y \mapsto \Span{4,5}
+].
+\]
+	
+\noindent
+\textbf{Deletion before an extracted span.}
+Let
+\[
+d=\mathtt{zabc}
+\]
+and the spanner extracts
+\[
+x\{\mathtt{a}\,y\{\mathtt{b}\}\,\mathtt{c}\}.
+\]
+then
+\[
+E=\del_1.
+\]
+Then
+\[
+E(d)=\mathtt{abc}.
+\]
+\[
+\mu =
+[
+x \mapsto \Span{1,4},
+y \mapsto \Span{2,3}
+]
+\]
+When transporting back, all spans move one position to the right, because the deleted symbol was before them. 
+Hence,
+\[
+E^{-1}(\mu)
+=
+[
+x \mapsto \Span{2,5},
+y \mapsto \Span{3,4}
+]
+\]
+	
+\noindent
+\textbf{boundary case.}
+
+\[
+d=\mathtt{a}
+\]
+and
+\[
+x\{ab\}
+\]
+and
+\[
+E=\ins_{2,\mathtt{b}}
+\]
+produces
+\[
+x \mapsto \Span{1,3},
+\]
+which captures $\mathtt{a}$.
+obtaining
+\[
+E(d)=\mathtt{ab}.
+\]
+This is a boundary case, because the insertion happens exactly at the right endpoint of the span $\Span{1,2}$.
+Following what defined before, insertions at the right boundary are considered inside the span, then the inverse mapping is
+\[
+E^{-1}(x) = x \mapsto \Span{1,2}
+\]
+
+\subsection{Equivalence of the two semantics}
+
+The two semantics defined above differ only in the coordinate system used to report mappings. 
+In the edited-document semantics, mappings are reported over the edited document $E(d)$. 
+In the original-document semantics, the same mappings are transported back through the inverse of the edit script and are reported over the original document $d$.
+
+This gives a direct translation from one semantics to the other. By definition:
+
+\[
+\llbracket S^{\mathsf{orig}}_{\leq k} \rrbracket(d)
+=
+\left\{
+(E^{-1}(\mu),E)
+\;\middle|\;
+(\mu,E) \in \llbracket S^{\mathsf{edit}}_{\leq k} \rrbracket(d)
+\right\}.
+\]
+
+Thus, computing the original-document semantics does not require a different extraction procedure. 
+One may first compute the edited-document semantics and then transport every resulting mapping back through the corresponding edit script.
+
+Conversely, every output of the original-document semantics arises in this way from some output of the edited-document semantics. 
+Therefore, the two semantics represent the same approximate extractions, but in different coordinate systems: one over the edited document and the other over the original document.

@@ -5,25 +5,49 @@ To model extraction under errors, we consider documents that may differ from an 
 
 \subsection{Edit operations}
 
-Let $d = a_0 a_1 \cdots a_{n-1} \in \Sigma^*$ be a document. We consider the standard atomic edit operations:
-\begin{itemize}
-	\item \emph{Insertion}, denoted $\ins(p,c)$, which inserts the symbol $c \in \Sigma$ at position $p$, where $0 \le p \le n$;
-	\item \emph{Deletion}, denoted $\del(p)$, which deletes the symbol currently stored at position $p$, where $0 \le p < n$;
-	\item \emph{Substitution}, denoted $\sub(p,c)$, which replaces the symbol at position $p$ by $c \in \Sigma$, where $0 \le p < n$.
-\end{itemize}
+Let $d = a_0 a_1 \cdots a_{n-1} \in \Sigma^*$ be a document. 
+For $i \in \mathbb{N}$ and $c \in \Sigma$, we consider the following atomic edit operations, viewed as functions over $\Sigma^*$:
+\[
+\ins_{i,c},\ \del_i,\ \sub_{i,c} : \Sigma^* \to \Sigma^*.
+\]
+They are defined as follows:
+\[
+\ins_{i,c}(d) =
+\begin{cases}
+	a_1 \cdots a_{i-1}\, c\, a_i \cdots a_n, & \text{if } 1 \leq i \leq n+1,\\
+	d, & \text{otherwise,}
+\end{cases}
+\]
+\[
+\del_i(d) =
+\begin{cases}
+	a_1 \cdots a_{i-1} a_{i+1} \cdots a_n, & \text{if } 1 \leq i \leq n,\\
+	d, & \text{otherwise,}
+\end{cases}
+\]
+\[
+\sub_{i,c}(d) =
+\begin{cases}
+	a_1 \cdots a_{i-1}\, c\, a_{i+1} \cdots a_n, & \text{if } 1 \leq i \leq n,\\
+	d, & \text{otherwise.}
+\end{cases}
+\]
 
+Thus, an edit operation whose index is not valid for the current document has no effect and returns the document unchanged.  
+Insertions are allowed at positions $1$ through $n+1$:the special case $i=n+1$ appends the character to the end. 
+Deletions and substitutions affect only positions $1$ through $n$.
+Edit operations are always interpreted over the current version of the document at the moment they are applied; in particular, the effect of an edit may depend on the edits that precede it.
 \cristian{
-$\ins_{i,c}: \Sigma^* \rightarrow \Sigma^*$
-
-$\ins_{i,c}(a_1 \ldots a_n) = a_1 \ldots a_{i-1} c a_i \ldots a_n$
-
-$\del_{i}$
-
-$\sub_{i,c}$
+	$\ins_{i,c}: \Sigma^* \rightarrow \Sigma^*$
+	
+	$\ins_{i,c}(a_1 \ldots a_n) = a_1 \ldots a_{i-1} c a_i \ldots a_n$
+	
+	$\del_{i}$
+	
+	$\sub_{i,c}$
 }
 \cristian{Decir que pasa con $i$ cuando no es el tamaño de la palabra.}
 
-These operations are interpreted over the current version of the document at the moment they are applied. Thus, the order in which edits are performed matters.
 
 \subsection{Edit scripts and edit distance}
 
@@ -37,30 +61,41 @@ $E = e_1 \ldots e_k \in \operatorname{Edits}$
 $E(w) = e_k(\ldots e_2(e_1(w)) \ldots )$
 }
 
-An \emph{edit script} is a finite sequence
+Let
 \[
-E = [op_1,\dots,op_m]
+\operatorname{Edits}
+=
+\{\ins_{i,c} \mid i \in \mathbb{N},\ c \in \Sigma\}
+\cup
+\{\del_i \mid i \in \mathbb{N}\}
+\cup
+\{\sub_{i,c} \mid i \in \mathbb{N},\ c \in \Sigma\}
 \]
-of atomic edit operations. The action of $E$ on a document $d$ is defined recursively by
+be the set of all atomic edit operations over $\Sigma$.
+
+An \emph{edit script} is a finite sequence of atomic edit operations
 \[
-\emptyset(d) = d,
-\qquad
-[op_1,\dots,op_m](d) = [op_2,\dots,op_m](op_1(d)).
+E = e_1 \cdots e_m \in \operatorname{Edits}^*.
+\]
+The empty edit script is denoted by $\epsilon$. Its action on a document $d \in \Sigma^*$ is defined by $\epsilon(d) = d$ and, for $E = e_1 \cdots e_m$
+\[
+E(d) = e_m(\cdots e_2(e_1(d)) \cdots).
+\]
+Equivalently, $E(d)$ is the document obtained by applying the operations of $E$ from left to right.We write $|E|$ for the length of the script, namely the number of atomic edit operations occurring in $E$.
+
+The \emph{edit distance} between two documents $d,d' \in \Sigma^*$ is denoted by
+\[
+\operatorname{edist}(d,d')
+\]
+and is defined as
+\[
+\operatorname{edist}(d,d')
+=
+\min \{\, |E| \mid E \in \operatorname{Edits}^* \text{ and } E(d)=d' \,\}.
 \]
 
 \cristian{Yo cambiaría $\emptyset = \epsilon$}
 
-Equivalently, if $E = [op_1,\dots,op_m]$, then $E(d)$ is the document obtained after applying the operations from left to right.
-
-The \emph{edit distance} between two documents $d,d' \in \Sigma^*$, denoted by $\Delta(d,d')$, is the minimum length of an edit script $E$ such that
-\[
-E(d)=d'.
-\]
-
-We write $|E|$ for the number of operations in $E$. By definition,
-\[
-\Delta(d,d') = \min \{\, |E| \mid E(d)=d' \,\}.
-\]
 \cristian{Buscar otra notación para $\Delta$.
 
 $\operatorname{edist}$
@@ -68,12 +103,26 @@ $\operatorname{edist}$
 $\operatorname{dist}$
 }
 
-\paragraph{Example.}
-If $d=\mathtt{a}$, then the script
-\[
-E=[\ins(1,\mathtt{b}),\ins(2,\mathtt{c})]
-\]
-satisfies $E(d)=\mathtt{abc}$, and therefore $\Delta(\mathtt{a},\mathtt{abc}) \le 2$.
+\begin{example}
+	Let $d = \mathtt{a}$ and $d' = \mathtt{abc}$. 
+	Then
+	\[
+	E = \ins_{2,\mathtt{b}}\,\ins_{3,\mathtt{c}}
+	\]
+	is an edit script such that $E(d)=d'$. Indeed,
+	\[
+	\mathtt{a}
+	\xrightarrow{\ins_{2,\mathtt{b}}}
+	\mathtt{ab}
+	\xrightarrow{\ins_{3,\mathtt{c}}}
+	\mathtt{abc}.
+	\]
+	Hence,
+	\[
+	\operatorname{edist}(\mathtt{a},\mathtt{abc}) = 2.
+	\]
+	In fact, $\operatorname{edist}(\mathtt{a},\mathtt{abc}) = 2$, since transforming $\mathtt{a}$ into $\mathtt{abc}$ requires inserting at least two symbols.
+\end{example}
 
 \subsection{Transporting mappings through edit scripts}
 
@@ -81,62 +130,93 @@ satisfies $E(d)=\mathtt{abc}$, and therefore $\Delta(\mathtt{a},\mathtt{abc}) \l
 
 Since our extraction results are mappings from variables to spans, we also need to specify how edits affect captured spans.
 
-Let $\mu$ be a mapping over a document $d$, and suppose that $\mu(x)=[i,j\rangle$. For an atomic edit operation $op$, we define the transported span $op(\Span{i,j})$ as follows.
+Let $d = a_1 \cdots a_n \in \Sigma^*$ be a document, and let $\Span{i,j}$ be a span over $d$, with $1 \leq i \leq j \leq n+1$
+For an atomic edit operation $e \in \operatorname{Edits}$, we define the transported span $e(\Span{i,j})$ as follows.
 
-For insertions, we set
+For insertions, if $1 \leq p \leq n+1$, we set
 \[
-\ins(p,c)(\Span{i,j})=
+\ins_{p,c}(\Span{i,j}) =
 \begin{cases}
-	\Span{i+1,j+1} & \text{if } p \le i,\\
-	\Span{i,j+1} & \text{if } i < p \le j,\\
+	\Span{i+1,j+1} & \text{if } p \leq i,\\
+	\Span{i,j+1} & \text{if } i < p \leq j,\\
 	\Span{i,j} & \text{if } j < p.
 \end{cases}
 \]
+If $p$ is not a valid insertion position for $d$, then $\ins_{p,c}(\Span{i,j}) = \Span{i,j}$.
 
-For deletions, we set
+For deletions, if $1 \leq p \leq n$, we set
 \[
-\del(p)(\Span{i,j})=
+\del_p(\Span{i,j}) =
 \begin{cases}
 	\Span{i-1,j-1} & \text{if } p < i,\\
-	\Span{i,j-1} & \text{if } i \le p < j,\\
-	\Span{i,j} & \text{if } j \le p.
+	\Span{i,j-1} & \text{if } i \leq p < j,\\
+	\Span{i,j} & \text{if } j \leq p.
 \end{cases}
 \]
+If $p$ is not a valid deletion position for $d$, then $\del_p(\Span{i,j}) = \Span{i,j}$.
 
-For substitutions, the span is unchanged:
+For substitutions, spans are unchanged:
 \[
-\sub(p,c)(\Span{i,j}) = \Span{i,j}.
+\sub_{p,c}(\Span{i,j}) = \Span{i,j}.
 \]
 
-These operations extend pointwise to mappings. If $x \in \dom(\mu)$ and $\mu(x)=\Span{i,j}$, then
-\[
-[op(\mu)](x) = op(\Span{i,j}).
-\]
-Thus, $op(\mu)$ is obtained by transporting every captured span according to the positional effect of $op$.
 
-Finally, if
+These operations extend pointwise to mappings. If $\mu$ is a mapping over $d$, then $e(\mu)$ is the mapping with domain $\dom(\mu)$ such that, for every $x \in \dom(\mu)$,
 \[
-E=[op_1,\dots,op_m]
-\]
-is an edit script, its action on mappings is defined recursively by
-\[
-\emptyset(\mu)=\mu,
-\qquad
-[op_1,\dots,op_m](\mu) = [op_2,\dots,op_m](op_1(\mu)).
+e(\mu)(x) = e(\mu(x)).
 \]
 
-Intuitively, $E(\mu)$ is the mapping obtained by relocating the spans of $\mu$ so that they remain consistent with the edited document $E(d)$.
+Finally, if$E = e_1 \cdots e_m \in \operatorname{Edits}^*$
+is an edit script, its action on mappings is defined by
+\[
+\epsilon(\mu)=\mu,
+\]
+and
+\[
+E(\mu) = e_m(\cdots e_2(e_1(\mu))\cdots).
+\]
 
-\subsection{Inverse edit scripts}
+Intuitively, $E(\mu)$ is the mapping obtained by relocating the spans of $\mu$ so that they remain consistent with the edited document $E(w)$.
+
+\subsection{Inverse transport of mappings}
 \cristian{Definir la inversa de cada operación formalmente. Decir que, sobre spans, todas las funciones tienen inversa.}
 
-Every atomic edit operation has a natural inverse. Insertions are undone by deletions, deletions are undone by insertions, and substitutions are undone by restoring the original symbol. Accordingly, if
+We are mainly interested in transporting mappings back from an edited document to the original one. 
+For this reason, we define the inverse action of an edit script on spans and mappings.
+
+Let $e \in \operatorname{Edits}$ be an atomic edit operation. 
+We define its inverse span transport, denoted by $e^{-1}$, by using the opposite length-changing operation:
 \[
-E=[op_1,\dots,op_m],
+(\ins_{i,c})^{-1} = \del_i,
+\qquad
+(\del_i)^{-1} = \ins_{i,c} \text{ for any } c \in \Sigma,
+\qquad
+(\sub_{i,c})^{-1} = \sub_{i,c}.
 \]
-we define its inverse script by
+The choice of $c$ in $(\del_i)^{-1}$ is irrelevant, since the symbol inserted by an insertion does not affect how spans are transported.
+
+Thus, the inverse transport of an insertion is computed as a deletion at the same position, the inverse transport of a deletion is computed as an insertion at the same position, and substitutions leave spans unchanged.
+
+This inverse transport extends pointwise to mappings. 
+If $\mu$ is a mapping, then $e^{-1}(\mu)$ has the same domain as $\mu$ and satisfies
 \[
-E^{-1} = [op_m^{-1},\dots,op_1^{-1}].
+e^{-1}(\mu)(x)=e^{-1}(\mu(x))
+\qquad
+\text{for every } x \in \dom(\mu).
 \]
 
-Whenever $E(d)=d'$, the script $E^{-1}$ transforms $d'$ back into $d$. In the same way, inverse edit scripts allow us to transport mappings from the edited document back to the original one. This operation will be essential when relating the two semantics for information extraction with errors introduced in the next section.
+Now let $E=e_1\cdots e_m \in \operatorname{Edits}^*$
+be an edit script. 
+The inverse span transport induced by $E$ is
+\[
+E^{-1}(\mu)
+=
+e_1^{-1}(e_2^{-1}(\cdots e_m^{-1}(\mu)\cdots)).
+\]
+In other words, $E^{-1}(\mu)$ is obtained by moving the spans of $\mu$ backwards through the edits of $E$, starting from the last edit and ending with the first one.
+
+If $E=\epsilon$, then no edit has been applied. Hence, the inverse transport induced by $E$ is the identity on mappings:
+\[
+\epsilon^{-1}(\mu)=\mu.
+\]
+In particular, $\epsilon^{-1}=\epsilon$.
