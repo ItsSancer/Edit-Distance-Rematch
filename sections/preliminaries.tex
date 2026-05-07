@@ -10,10 +10,6 @@ We write $\mathrm{span}(d)$ for the set of all spans of $d$.
 
 \paragraph{Document spanners} A document spanner is a function $S$ that maps every document $d \in \Sigma^*$ to a set $S(d)$ of mappings over $d$, such that the range of each $\mu \in S(d)$ are spans of $d$—thus modeling the process of extracting the information (in form of mappings) from $d$. For this goal, we will work with one model for defining spanners: variable-set automata.
 
-\cristian{Usar una notación para document spanners $S$.
-	
-$S(d)$ conjunto de mappings sobre $d$.}
-
 
 \subsection{Variable-set automata.} 
 A \textit{variable-set automaton}(VA) can be understood as an $\epsilon$-NFA that is extended with capture variables; that is, it behaves a usual finite state automaton with $\epsilon-$transitions, except it can also open and close variables. Formally, a VA $\mathcal{A}$ is tuple $(Q, \Sigma, V, q_0, F, \delta )$ Q is a finite set of states, V is a finite set of variables, $q_0 \in Q$ is an initial state, $F \subseteq Q$ is a set of final states and $\delta$ is a transition relation consisting of letter transitions of the form $(q, a, q')$ and variable transition of the form $(q, \ox, q')$ or $(q, \cx, q')$, where $q, q' \in Q$, $a \in \Sigma$ and $x \in V$. The $\ox$ and $\cx$ are special symbols to denote the opening or closing of a variable x. We define the set $\Vars(\mathcal{A})$ as the set of all variables that occur in $\mathcal{A}$.

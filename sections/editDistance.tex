@@ -37,29 +37,8 @@ Thus, an edit operation whose index is not valid for the current document has no
 Insertions are allowed at positions $1$ through $n+1$:the special case $i=n+1$ appends the character to the end. 
 Deletions and substitutions affect only positions $1$ through $n$.
 Edit operations are always interpreted over the current version of the document at the moment they are applied; in particular, the effect of an edit may depend on the edits that precede it.
-\cristian{
-	$\ins_{i,c}: \Sigma^* \rightarrow \Sigma^*$
-	
-	$\ins_{i,c}(a_1 \ldots a_n) = a_1 \ldots a_{i-1} c a_i \ldots a_n$
-	
-	$\del_{i}$
-	
-	$\sub_{i,c}$
-}
-\cristian{Decir que pasa con $i$ cuando no es el tamaño de la palabra.}
-
 
 \subsection{Edit scripts and edit distance}
-
-\cristian{
-$\operatorname{Edits} = \{\ins_{i,c} \mid i, c\} \cup
-\{\del_i \mid i\} \cup
-\{\sub_{i,c}\}$
-
-$E = e_1 \ldots e_k \in \operatorname{Edits}$
-
-$E(w) = e_k(\ldots e_2(e_1(w)) \ldots )$
-}
 
 Let
 \[
@@ -94,14 +73,10 @@ and is defined as
 \min \{\, |E| \mid E \in \operatorname{Edits}^* \text{ and } E(d)=d' \,\}.
 \]
 
-\cristian{Yo cambiaría $\emptyset = \epsilon$}
-
-\cristian{Buscar otra notación para $\Delta$.
-
 $\operatorname{edist}$
 
 $\operatorname{dist}$
-}
+
 
 \begin{example}
 	Let $d = \mathtt{a}$ and $d' = \mathtt{abc}$. 
@@ -125,8 +100,6 @@ $\operatorname{dist}$
 \end{example}
 
 \subsection{Transporting mappings through edit scripts}
-
-\cristian{Actualizar la notación pensando $\ins$, $\del$ y $\sub$ como funciones de $\Sigma^*$ a $\Sigma^*$.}
 
 Since our extraction results are mappings from variables to spans, we also need to specify how edits affect captured spans.
 
@@ -179,7 +152,6 @@ E(\mu) = e_m(\cdots e_2(e_1(\mu))\cdots).
 Intuitively, $E(\mu)$ is the mapping obtained by relocating the spans of $\mu$ so that they remain consistent with the edited document $E(w)$.
 
 \subsection{Inverse transport of mappings}
-\cristian{Definir la inversa de cada operación formalmente. Decir que, sobre spans, todas las funciones tienen inversa.}
 
 We are mainly interested in transporting mappings back from an edited document to the original one. 
 For this reason, we define the inverse action of an edit script on spans and mappings.

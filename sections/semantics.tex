@@ -1,59 +1,18 @@
 %!TEX root = ../main/main.tex
 
-
-We now introduce two semantics for information extraction with errors. 
+We now introduce the semantics for information extraction with errors. 
 Let $S$ be a document spanner. 
-Given a document $d$ and an error budget $k$, both semantics consider edit scripts $E$ with $|E|\leq k$ and evaluate $S$ over the edited document $E(d)$. 
-The difference between them lies in the coordinates in which the extracted mappings are reported. 
-In the first semantics, mappings are reported over the edited document $E(d)$. 
-In the second semantics, mappings are transported back and reported over the original document $d$.
+Given a document $d$ and an error budget $k$, we consider edit scripts $E$ with $|E|\leq k$ and evaluate $S$ over the edited document $E(d)$. 
 
+\subsection{Approximate extraction semantics}
 
-\subsection{Extraction over edited documents}
-
-\cristian{Cambiar esta definición a un span $S$.}
-
-The first semantics evaluates the spanner over a document obtained after applying an edit script to the input. 
-The extracted mapping is therefore interpreted over the edited document.
+The semantics evaluates the spanner over an edited version of the input document, but the resulting mappings are transported backwards through the edit script to refer to valid spans within the original input document.
 
 \begin{definition}
 	Let $S$ be a document spanner, let $d \in \Sigma^*$, and let $k \in \mathbb{N}$. 
-	The \emph{edited-document semantics} of $S$ over $d$ with error budget $k$ is
+	The \emph{approximate semantics} of $S$ over $d$ with error budget $k$ is defined as
 	\[
-	\llbracket S^{\mathsf{edit}}_{\leq k} \rrbracket (d)
-	=
-	\left\{
-	(\mu,E)
-	\;\middle|\;
-	E \in \operatorname{Edits}^*,\ 
-	|E| \leq k,
-	\text{ and }
-	\mu \in \llbracket S \rrbracket (E(d))
-	\right\}.
-	\]
-\end{definition}
-
-
-In this semantics, the script $E$ witnesses how the input document is modified, while the mapping $\mu$ is computed directly on the resulting document $E(d)$. 
-Thus, the spans appearing in $\mu$ refer to positions of the edited document.
-
-\paragraph{Remark}
-This is the most direct way of extending exact extraction to the approximate setting: we ask whether there exists an edited version of the input document that satisfies the spanner, and if so, we return a mapping over that edited document together with the corresponding edit script.
-
-\subsection{Extraction over the original document}
-\cristian{Cambiar esta definición según lo que discutimos en la pizarra.}
-\cristian{Agregar ejemplos.}
-
-\subsection{Extraction over the original document}
-
-The second semantics also evaluates the spanner over an edited version of the input document. 
-However, in this case, the extracted mappings are transported back to the original document by using the inverse transport induced by the edit script.
-
-\begin{definition}
-	Let $S$ be a document spanner, let $d \in \Sigma^*$, and let $k \in \mathbb{N}$. 
-	The \emph{original-document semantics} of $S$ over $d$ with error budget $k$ is
-	\[
-	\llbracket S^{\mathsf{orig}}_{\leq k} \rrbracket (d)
+	\llbracket S_{\leq k} \rrbracket (d)
 	=
 	\left\{
 	(E^{-1}(\mu),E)
@@ -66,95 +25,39 @@ However, in this case, the extracted mappings are transported back to the origin
 	\]
 \end{definition}
 
-In this semantics, the spanner is evaluated over the edited document $E(d)$, but the resulting mapping $\mu$ is not reported in the coordinates of $E(d)$. 
-Instead, $\mu$ is transported backwards through the edit script $E$, and the returned mapping $E^{-1}(\mu)$ refers to spans of the original document $d$.
+In this semantics, the script $E$ witnesses how the input document is modified to satisfy the spanner. While the mapping $\mu$ is computed directly on the resulting edited document $E(d)$, the returned mapping $E^{-1}(\mu)$ correctly refers to the coordinates of the original document $d$. 
 
-Thus, while $S^{\mathsf{edit}}_{\leq k}(d)$ reports mappings over edited documents, $S^{\mathsf{orig}}_{\leq k}(d)$ reports mappings over the original input document.
 
 \subsubsection{Examples}
-	
-\textbf{ without edits.}
-\[
-d=\mathtt{ab}.
-\]
-The spanner
-\[
-x\{y\{\mathtt{a}\}\mathtt{b}\}
-\]
-corresponds to the mapping
-\[
-\mu =
-[
-x \mapsto \Span{1,3},
-y \mapsto \Span{1,2}
-].
-\]
-In this case, $E = \epsilon$, that means $E^{-1}(\mu)= \epsilon (\mu) = \mu$
 
-
-\noindent	
-\textbf{Substitution inside an extracted span.}
-	
-\[
-d=\mathtt{ac},
-\]
-and edit script
-\[
-E=\sub_{2,\mathtt{b}}
-\]
-same spanner as last example.
-Corresponds to the mapping
-\[
-\mu =
-[
-x \mapsto \Span{1,3},
-y \mapsto \Span{1,2}
-].
-\]
-
-In this case $E$ only have a substitution, so $E^{-1}(\mu) = \mu$ wich is correct.
+To illustrate how the inverse transport adjusts the spans back to the original document, we present two scenarios: an insertion and a deletion occurring inside an extracted span.
 
 \noindent
 \textbf{Insertion inside an extracted span.}
 
-	\[
-	d=\mathtt{ac}
-	\]
-the spanner extracts
+Consider the original document $d=\mathtt{ac}$ and the edit script $E=\ins_{2,\mathtt{b}}$.
+Applying the edit yields the document $E(d)=\mathtt{abc}$.
+Suppose the spanner extracts the following mapping over the edited document:
 \[
-x\{\mathtt{a}\,y\{\mathtt{b}\}\,\mathtt{c}\}.
+\mu =
+[
+x \mapsto \Span{1,4},
+y \mapsto \Span{2,3}
+].
 \]
-	and edit script
-	\[
-	E=\ins_{2,\mathtt{b}}.
-	\]
-	Then
-	\[
-	E(d)=\mathtt{abc}.
-	\]
+This corresponds to the extraction $x\{\mathtt{a}\,y\{\mathtt{b}\}\,\mathtt{c}\}$ over $\mathtt{abc}$.
 
-	That is,
-	\[
-	\mu =
-	[
-	x \mapsto \Span{1,4},
-	y \mapsto \Span{2,3}
-	]
-	\]
-	over the edited document $\mathtt{abc}$.
-	
-	Since the edit inserted $\mathtt{b}$ at position $2$, the inverse transport removes position reduce by one the upper limit of the spans 
-	Thus,
-	\[
-	E^{-1}(\mu)
-	=
-	[
-	x \mapsto \Span{1,3},
-	y \mapsto \Span{2,2}
-	].
-	\]
- the variable $x$ captures the whole document, while $y$ becomes an empty span between $\mathtt{a}$ and $\mathtt{c}$.
-
+Since the edit inserted $\mathtt{b}$ at position $2$, the inverse transport $E^{-1}$ acts as a deletion at position $2$. This reduces by one the upper limit of the spans that cross this position. 
+Thus, transporting the mapping back to the original document yields:
+\[
+E^{-1}(\mu)
+=
+[
+x \mapsto \Span{1,3},
+y \mapsto \Span{2,2}
+].
+\]
+In the coordinates of the original document $d=\mathtt{ac}$, the variable $x$ captures the entire document, while $y$ becomes an empty span between $\mathtt{a}$ and $\mathtt{c}$. We can visualize this effect as:
 \[
 \text{edited: } x\{\mathtt{a}\,y\{\mathtt{b}\}\,\mathtt{c}\}
 \qquad
@@ -162,22 +65,14 @@ x\{\mathtt{a}\,y\{\mathtt{b}\}\,\mathtt{c}\}.
 \qquad
 \text{original: } x\{\mathtt{a}\,y\{\epsilon\}\,\mathtt{c}\}.
 \]
-	
-\noindent
-\textbf{Insertion inside one span but outside another.}
 
-\[
-d=\mathtt{ac}
-\]
-the spanner extracts
-\[
-x\{\mathtt{a}\mathtt{b}\,y\{\mathtt{c}\}\}.
-\]
-then
-\[
-E=\ins_{2,\mathtt{b}}.
-\]
-Then $E(d)=\mathtt{abc}$. the mapping looks like:
+
+\noindent
+\textbf{Deletion inside an extracted span.}
+
+Consider the original document $d=\mathtt{abbc}$ and the edit script $E=\del_2$.
+Applying this deletion results in the edited document $E(d)=\mathtt{abc}$.
+Assume the spanner extracts the mapping $\mu$ over $E(d)$ given by:
 \[
 \mu =
 [
@@ -185,45 +80,10 @@ x \mapsto \Span{1,4},
 y \mapsto \Span{3,4}
 ].
 \]
-After transporting back through $E^{-1}$, we get
-\[
-E^{-1}(\mu)
-=
-[
-x \mapsto \Span{1,3},
-y \mapsto \Span{2,3}
-]
-\]
-So $x$ captures the whole original document $\mathtt{ac}$, while $y$ captures only $\mathtt{c}$.
+This corresponds to the extraction $x\{\mathtt{a}\mathtt{b}\,y\{\mathtt{c}\}\}$ over $\mathtt{abc}$.
 
-	
-\noindent
-\textbf{Deletion inside an extracted span.}
-Let
-\[
-d=\mathtt{abbc}
-\]
-same spanner as before, consider the edit script
-\[
-E=\del_2.
-\]
-Then
-\[
-E(d)=\mathtt{abc}
-\]
-
-Thus,
-\[
-\mu =
-[
-x \mapsto \Span{1,4},
-y \mapsto \Span{3,4}
-]
-\]
-over $\mathtt{abc}$.
-	
-Since the original edit deleted the symbol at position $2$, the inverse transport behaves like inserting a position back at position $2$. 
-Therefore,
+Because the original edit script deleted the symbol at position $2$ of $d$, the inverse transport $E^{-1}$ behaves as an insertion at position $2$. This effectively shifts the coordinates of the spans that occur after the deletion one position to the right, aligning them with the original text. 
+Therefore, the inverse mapping is:
 \[
 E^{-1}(\mu)
 =
@@ -232,92 +92,82 @@ x \mapsto \Span{1,5},
 y \mapsto \Span{4,5}
 ].
 \]
+Over the original document $d=\mathtt{abbc}$, the variable $x$ correctly captures the entire string $\Span{1,5}$, and $y$ captures the final $\mathtt{c}$ at $\Span{4,5}$.
+
+%!TEX root = ../main/main.tex
+
+\subsection{Validity of the Approximate Semantics}
+
+To ensure that $\llbracket S_{\leq k} \rrbracket$ acts as a valid extraction framework over the original document, we must prove that any mapping transported back through $E^{-1}$ only contains valid spans over $d$. We prove this by induction on the sequence of edit operations.
+
+First, we show that a single inverse edit operation preserves span validity with respect to the pre-edited document.
+
+\begin{lemma}\label{lemma:single_edit_validity}
+	Let $d \in \Sigma^*$ be a document and $e \in \operatorname{Edits}$ an atomic edit operation. 
+	If $s = \Span{i,j} \in \operatorname{span}(e(d))$, then $e^{-1}(s) \in \operatorname{span}(d)$.
+\end{lemma}
+
+\begin{proof}
+	Let $n = |d|$. We analyze the three possible types of atomic edits applied to $d$ to verify that $e^{-1}(s)$ is a valid span over $d$. This means its transformed coordinates must fall strictly within the range $[1, n+1]$ and preserve the order $i \leq j$.
 	
-\noindent
-\textbf{Deletion before an extracted span.}
-Let
-\[
-d=\mathtt{zabc}
-\]
-and the spanner extracts
-\[
-x\{\mathtt{a}\,y\{\mathtt{b}\}\,\mathtt{c}\}.
-\]
-then
-\[
-E=\del_1.
-\]
-Then
-\[
-E(d)=\mathtt{abc}.
-\]
-\[
-\mu =
-[
-x \mapsto \Span{1,4},
-y \mapsto \Span{2,3}
-]
-\]
-When transporting back, all spans move one position to the right, because the deleted symbol was before them. 
-Hence,
-\[
-E^{-1}(\mu)
-=
-[
-x \mapsto \Span{2,5},
-y \mapsto \Span{3,4}
-]
-\]
+	\begin{itemize}
+		\item \textbf{$e = \sub_{p,c}$:} 
+		The length of the document does not change, so $|e(d)| = n$. 
+		Thus, $s = \Span{i,j} \in \operatorname{span}(e(d))$ implies $1 \leq i \leq j \leq n+1$. 
+		Since $e^{-1} = \sub_{p,c}$, the inverse transport leaves the span completely unchanged: $e^{-1}(s) = \Span{i,j}$. 
+		Both bounds trivially remain valid over $d$.
+		
+		\vspace{0.3cm}
+		
+		\item \textbf{$e = \ins_{p,c}$:} 
+		The edited document grows by one character, so $|e(d)| = n+1$. 
+		Thus, $s = \Span{i,j} \in \operatorname{span}(e(d))$ implies $1 \leq i \leq j \leq n+2$. 
+		A valid insertion on the original document $d$ occurs at position $1 \leq p \leq n+1$. The inverse transport is $e^{-1} = \del_p$. According to its definition, we analyze three sub-cases:
+		\begin{itemize}
+			\item \textit{Case $p < i \leq j$:} Both coordinates are strictly greater than $p$, so both decrease by one. The new upper bound is $j-1 \leq (n+2)-1 = n+1$. The new lower bound is $i-1 \geq p \geq 1$.
+			\item \textit{Case $i \leq p < j$:} Only $j$ is strictly greater than $p$, so only $j$ decreases. The new upper bound becomes $j-1 \leq n+1$. The lower bound remains $i \geq 1$.
+			\item \textit{Case $i \leq j \leq p$:} Neither coordinate changes. Since $p$ is bounded by the maximum valid insertion position on $d$ ($p \leq n+1$), we inherently have $j \leq p \leq n+1$. The lower bound remains $i \geq 1$.
+		\end{itemize}
+		In all three sub-cases, the new coordinates are bounded within $[1, n+1]$, wich mean $e^{-1}(s) \in \operatorname{span}(d)$.
+		
+		\vspace{0.3cm}
+		\item \textbf{$e = \del_p$:} 
+		The edited document shrinks by one character, so $|e(d)| = n-1$. 
+		Thus, $s = \Span{i,j} \in \operatorname{span}(e(d))$ implies $1 \leq i \leq j \leq n$. 
+		A valid deletion on the original document $d$ occurs at position $1 \leq p \leq n$. The inverse transport is $e^{-1} = \ins_{p,c}$. We again analyze three sub-cases:
+		\begin{itemize}
+			\item \textit{Case $p \leq i \leq j$:} Both coordinates are greater than or equal to $p$, so both increase by one. The new upper bound is $j+1 \leq n+1$. The new lower bound is $i+1 \geq p+1 \geq 2 > 1$.
+			\item \textit{Case $i < p \leq j$:} Only $j$ increases. The new upper bound is $j+1 \leq n+1$. The lower bound remains $i \geq 1$.
+			\item \textit{Case $i \leq j < p$:} Neither coordinate changes. Since $s$ was a valid span over $e(d)$, we know $j \leq n < n+1$. The lower bound remains $i \geq 1$.
+		\end{itemize}
+		In all three sub-cases, the new coordinates fall within $[1, n+1]$.
+	\end{itemize}
+	Since the limits are respected and the monotonic nature of the inverse operations preserves $i \leq j$, we conclude that $e^{-1}(s) \in \operatorname{span}(d)$.
+\end{proof}
+
+Now we extend this property to arbitrary edit scripts, proving that the returned mappings belong to the original document.
+
+\begin{proposition}
+	Let $d \in \Sigma^*$ be a document, $E = e_1e_2\cdots e_m \in \operatorname{Edits}^*$ an edit script, and $\mu$ a mapping over $E(d)$. 
+	Then $E^{-1}(\mu)$ is a valid mapping over $d$.
+\end{proposition}
+
+\begin{proof}
+	We proceed by induction on the length of the edit script, $m = |E|$.
 	
-\noindent
-\textbf{boundary case.}
+	\textbf{Base case ($m=0$):} 
+	If $E = \epsilon$, then $E(d) = d$. 
+	The inverse transport is $\epsilon^{-1}(\mu) = \mu$. 
+	Since $\mu$ is a mapping over $E(d)=d$, it is trivially a valid mapping over $d$.
+	
+	\textbf{Inductive step:} 
+	Assume the proposition holds for all edit scripts of length $m-1$.
+	We can decompose $E$ as $E = E' e_m$, where $E' = e_1 \cdots e_{m-1}$. 
 
-\[
-d=\mathtt{a}
-\]
-and
-\[
-x\{ab\}
-\]
-and
-\[
-E=\ins_{2,\mathtt{b}}
-\]
-produces
-\[
-x \mapsto \Span{1,3},
-\]
-which captures $\mathtt{a}$.
-obtaining
-\[
-E(d)=\mathtt{ab}.
-\]
-This is a boundary case, because the insertion happens exactly at the right endpoint of the span $\Span{1,2}$.
-Following what defined before, insertions at the right boundary are considered inside the span, then the inverse mapping is
-\[
-E^{-1}(x) = x \mapsto \Span{1,2}
-\]
+	The edited document is $E(d) = e_m(E'(d))$, so $\mu \in \operatorname{e_m(E'(d))}$,the lemma~\ref{lemma:single_edit_validity} guarantees that $e_m^{-1}(\mu)$ is a valid mapping over the intermediate document $E'(d)$.
+	
+	Since $e_m^{-1}(\mu)$ is a valid mapping over $E'(d)$ and $|E'| = m-1$, we apply the inductive hypothesis. 
+	It follows that $(E')^{-1}(e_m^{-1}(\mu))$ is a valid mapping over $d$ and we have $E^{-1}(\mu) = (E')^{-1}(e_m(\mu))$. We conclude that $E^{-1}(\mu)$ is a valid mapping over $d$.
+\end{proof}
 
-\subsection{Equivalence of the two semantics}
-
-The two semantics defined above differ only in the coordinate system used to report mappings. 
-In the edited-document semantics, mappings are reported over the edited document $E(d)$. 
-In the original-document semantics, the same mappings are transported back through the inverse of the edit script and are reported over the original document $d$.
-
-This gives a direct translation from one semantics to the other. By definition:
-
-\[
-\llbracket S^{\mathsf{orig}}_{\leq k} \rrbracket(d)
-=
-\left\{
-(E^{-1}(\mu),E)
-\;\middle|\;
-(\mu,E) \in \llbracket S^{\mathsf{edit}}_{\leq k} \rrbracket(d)
-\right\}.
-\]
-
-Thus, computing the original-document semantics does not require a different extraction procedure. 
-One may first compute the edited-document semantics and then transport every resulting mapping back through the corresponding edit script.
-
-Conversely, every output of the original-document semantics arises in this way from some output of the edited-document semantics. 
-Therefore, the two semantics represent the same approximate extractions, but in different coordinate systems: one over the edited document and the other over the original document.
+Since every tuple in our semantics applies exactly this inverse transport, the approximate semantics correctly projects its extractions as valid mappings over the original document $d$.
