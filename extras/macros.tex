@@ -76,6 +76,8 @@
 
 
 \newcommand{\sem}[2]{\llbracket #1 \rrbracket(#2)}
+\newcommand{\editsem}[3]{
+	\llbracket #1 \rrbracket_{\leq #2}^{\operatorname{edit}}(#3)}
 \newcommand{\dom}{\mathsf{dom}}
 \newcommand{\ox}{x\!\vdash}
 \newcommand{\cx}{\dashv\!x}

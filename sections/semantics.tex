@@ -12,7 +12,7 @@ The semantics evaluates the spanner over an edited version of the input document
 	Let $S$ be a document spanner, let $d \in \Sigma^*$, and let $k \in \mathbb{N}$. 
 	The \emph{approximate semantics} of $S$ over $d$ with error budget $k$ is defined as
 	\[
-	\llbracket S_{\leq k} \rrbracket (d)
+	\editsem{S}{k}{d}
 	=
 	\left\{
 	(E^{-1}(\mu),E)
@@ -164,7 +164,7 @@ Now we extend this property to arbitrary edit scripts, proving that the returned
 	Assume the proposition holds for all edit scripts of length $m-1$.
 	We can decompose $E$ as $E = E' e_m$, where $E' = e_1 \cdots e_{m-1}$. 
 
-	The edited document is $E(d) = e_m(E'(d))$, so $\mu \in \operatorname{e_m(E'(d))}$,the lemma~\ref{lemma:single_edit_validity} guarantees that $e_m^{-1}(\mu)$ is a valid mapping over the intermediate document $E'(d)$.
+	The edited document is $E(d) = e_m(E'(d))$, so $\mu \in \operatorname{e_m(E'(d))}$, the Lemma~\ref{lemma:single_edit_validity} guarantees that $e_m^{-1}(\mu)$ is a valid mapping over the intermediate document $E'(d)$.
 	
 	Since $e_m^{-1}(\mu)$ is a valid mapping over $E'(d)$ and $|E'| = m-1$, we apply the inductive hypothesis. 
 	It follows that $(E')^{-1}(e_m^{-1}(\mu))$ is a valid mapping over $d$ and we have $E^{-1}(\mu) = (E')^{-1}(e_m(\mu))$. We conclude that $E^{-1}(\mu)$ is a valid mapping over $d$.
