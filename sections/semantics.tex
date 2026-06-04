@@ -3,6 +3,7 @@
 We now introduce the semantics for information extraction with errors. 
 Let $S$ be a document spanner. 
 Given a document $d$ and an error budget $k$, we consider edit scripts $E$ with $|E|\leq k$ and evaluate $S$ over the edited document $E(d)$. 
+We write $\ValidEdits{k}{d}$ for the set of all edit scripts $E$ that are valid on $d$ and satisfy $|E|\leq k$.
 
 \subsection{Approximate extraction semantics}
 
@@ -12,13 +13,11 @@ The semantics evaluates the spanner over an edited version of the input document
 	Let $S$ be a document spanner, let $d \in \Sigma^*$, and let $k \in \mathbb{N}$. 
 	The \emph{approximate semantics} of $S$ over $d$ with error budget $k$ is defined as
 	\[
-	\editsem{S}{k}{d}
-	=
+	\editsem{S}{k}{d} =
 	\left\{
 	(E^{-1}(\mu),E)
-	\;\middle|\;
-	E \in \operatorname{Edits}^*,\
-	|E| \leq k,
+	\mid
+	E \in \ValidEdits{k}{d} 
 	\text{ and }
 	\mu \in \llbracket S \rrbracket (E(d))
 	\right\}.
@@ -98,7 +97,28 @@ Over the original document $d=\mathtt{abbc}$, the variable $x$ correctly capture
 
 \subsection{Validity of the Approximate Semantics}
 
-To ensure that $\llbracket S_{\leq k} \rrbracket$ acts as a valid extraction framework over the original document, we must prove that any mapping transported back through $E^{-1}$ only contains valid spans over $d$. We prove this by induction on the sequence of edit operations.
+Since $\editsem{S}{k}{d}$ contains pairs of the form $(E^{-1}(\mu),E)$, it is not itself a span relation. Therefore, it does not directly define a document spanner. To obtain the actual extraction result, we project away the edit script.
+
+\begin{definition}
+	Let $S$ be a document spanner, let $d\in\Sigma^*$, and let $k\in\bbN$.
+	The \emph{projected edit semantics} of $S$ over $d$ with error budget $k$ is defined as
+	\[
+	\projeditsem{S}{k}{d} =
+	\left\{
+		E^{-1}(\mu)
+		\mid
+		E\in\ValidEdits{k}{d}
+		\text{ and }
+		\mu\in\sem{S}{E(d)}
+		\right\}.
+	\]
+\end{definition}
+
+The projected edit semantics is the object that we study as a document spanner. For every input document $d$, it returns only mappings over spans of $d$.
+
+\subsubsection{Document Spanner proof}
+
+To ensure that $\projeditsem{S}{k}{d}$ acts as a valid extraction framework over the original document, we must prove that any mapping transported back through $E^{-1}$ only contains valid spans over $d$. We prove this by induction on the sequence of edit operations.
 
 First, we show that a single inverse edit operation preserves span validity with respect to the pre-edited document.
 
@@ -171,3 +191,148 @@ Now we extend this property to arbitrary edit scripts, proving that the returned
 \end{proof}
 
 Since every tuple in our semantics applies exactly this inverse transport, the approximate semantics correctly projects its extractions as valid mappings over the original document $d$.
+
+\subsubsection{Regular spanner proof}
+
+\begin{theorem}\label{thm:approx_regular_spanner}
+Let $S$ be a regular document spanner and let $k\in\bbN$. Then $\projeditsem{S}{k}{\cdot}$ defines a regular document spanner.
+\end{theorem}
+
+
+\begin{proof}
+	Since $S$ is a regular document spanner, there exists a variable-set automaton $\cA=(Q,\Sigma,V,q_0,F,\delta)$
+	such that $\sem{\cA}{d}=\sem{S}{d}$ for every document $d\in\Sigma^*$.
+
+	We construct a variable-set automaton $\mathcal{B}_k$ such that, for every document $d$,
+	\[
+	\sem{\mathcal{B}_k}{d}=\projeditsem{S}{k}{d}.
+	\]
+	The automaton $\mathcal{B}_k$ simulates $\cA$ while reading the original document. Its states store a state of $\cA$ and the number of edits used so far:
+	\[
+	Q' = Q \times \{0,\ldots,k\}.
+	\]
+	The initial state is $(q_0,0)$ and the final states are
+	\[
+	F' = F \times \{0,\ldots,k\}.
+	\]
+	
+	The transition relation $\delta'$ is defined as follows. First, every non-editing transition of $\cA$ is copied without increasing the edit counter:
+	\[
+	(q,\alpha,q')\in\delta
+	\quad\Longrightarrow\quad
+	((q,r),\alpha,(q',r))\in\delta',
+	\]
+	for every $0\leq r\leq k$, where $\alpha$ is a letter, an $\varepsilon$-transition, or a variable marker.
+	
+	For every $0\leq r<k$, we also add the edit transitions. For every letter transition $(q,b,q')\in\delta$ and every $a\in\Sigma$ with $a\neq b$, we add
+	\[
+	((q,r),a,(q',r+1))\in\delta',
+	\]
+	which simulates substituting $a$ by $b$. For every $q\in Q$ and $a\in\Sigma$, we add
+	\[
+	((q,r),a,(q,r+1))\in\delta',
+	\]
+	which simulates deleting $a$ from the original document. Finally, for every letter transition $(q,b,q')\in\delta$, we add
+	\[
+	((q,r),\varepsilon,(q',r+1))\in\delta',
+	\]
+	which simulates inserting $b$ into the edited document.
+	
+	
+	We use the following canonical convention for deletions. If a deletion and a variable marker occur at the same simulated boundary of $\cA$, then $\mathcal{B}_k$ performs the deletion before emitting the marker.
+	
+	\santiago{Esta parte del orden canonico hay que revisarlo bien. Es fundamental para que el automata funcione bien pero no se si es aplicable en la practica realmente}
+	
+	We now explain why the mappings produced by $\mathcal{B}_k$ are exactly the inverse transports defined above. Consider an accepting run $\rho$ of $\cA$ over an edited document $E(d)$, and let $\rho'$ be the corresponding run of $\mathcal{B}_k$ over the original document $d$. The run $\rho'$ follows the same simulated transitions as $\rho$, but uses edit transitions whenever the edit script $E$ inserts, deletes, or substitutes symbols.
+	
+	We use $j$ for the current input index of $\rho$ over the edited document $E(d)$, and $i$ for the current input index of $\rho'$ over the original document $d$. Thus, $j$ is a boundary in the edited document, while $i$ is a boundary in the original document.
+	
+	The variable-marker transitions of $\cA$ are copied into $\mathcal{B}_k$. Hence, if $\cA$ has a transition $(q,m,q')$, where $m$ is either $\ox$ or $\cx$, then $\mathcal{B}_k$ has the corresponding transition
+	\[
+	((q,r),m,(q',r))
+	\]
+	for every edit counter $r$.
+	
+	However, the index at which a marker is emitted is determined by the configuration where the transition is taken. If $\rho$ takes $(q,m,q')$ from configuration $(q,j)$, then $m$ is emitted at boundary $j$ of $E(d)$. The corresponding run $\rho'$ takes $((q,r),m,(q',r))$ from a configuration $((q,r),i)$, so $m$ is emitted at boundary $i$ of $d$.
+	
+	The edit transitions of $\mathcal{B}_k$ are designed so that, after simulating each atomic edit, the boundary $i$ is exactly the inverse transport of the boundary $j$ according to the definitions of $e^{-1}$ given above. We check this case by case.
+	
+	\begin{itemize}
+		\item If the step is an ordinary match, then both runs consume one symbol. Thus the indices are updated as
+		\[
+		(i,j)\mapsto(i+1,j+1).
+		\]
+		No edit operation is added, so the inverse transport is the identity on this step.
+		
+		\item If the step is a substitution, then $\rho'$ consumes one symbol from $d$ and the simulated run $\rho$ consumes one symbol from $E(d)$. Again,
+		\[
+		(i,j)\mapsto(i+1,j+1).
+		\]
+		This agrees with the definition $(\sub_{\ell,c})^{-1}=\sub_{\ell,c}$, since substitutions do not change document length and therefore do not shift span boundaries.
+		
+		\item If the step is an insertion into the edited document, then $\rho$ consumes the inserted symbol, while $\rho'$ consumes no symbol from the original document. Hence
+		\[
+		(i,j)\mapsto(i,j+1).
+		\]
+		The edited boundary advances, but the original boundary stays fixed. This is exactly the inverse behavior of an insertion, since $(\ins_{\ell,c})^{-1}=\del_{\ell}$: a boundary that moves across an inserted symbol in $E(d)$ is transported back to the same boundary in $d$.
+		
+		\item If the step is a deletion from the original document, then $\rho'$ consumes one symbol from $d$, while the simulated run $\rho$ does not consume any symbol from $E(d)$. Hence
+		\[
+		(i,j)\mapsto(i+1,j).
+		\]
+		The original boundary advances, while the edited boundary stays fixed. This is exactly the inverse behavior of a deletion, since $(\del_{\ell})^{-1}=\ins_{\ell,c}$: transporting a boundary back through a deletion shifts it to the corresponding boundary in the original document. By the canonical convention above, if a deletion and a marker occur at the same simulated boundary, the deletion is performed before emitting the marker, so the marker is placed at the boundary prescribed by the inverse transport.
+		
+	\end{itemize}
+	
+	\noindent Now let $x\in V$, and suppose that the run $\rho$ assigns
+	\[
+	\mu(x)=\Span{j_1,j_2}
+	\]
+	over the edited document $E(d)$. This means that $\rho$ emits $\ox$ at boundary $j_1$ and $\cx$ at boundary $j_2$. Let the corresponding run $\rho'$ emit these markers at boundaries $i_1$ and $i_2$ of the original document. By the case analysis above, each atomic edit transition updates the pair of boundaries exactly as the corresponding inverse span transport. Therefore,
+	\[
+	\Span{i_1,i_2}
+	=
+	E^{-1}(\Span{j_1,j_2}).
+	\]
+	Hence, if $\mu'$ is the mapping produced by $\rho'$, then
+	\[
+	\mu'(x)=E^{-1}(\mu(x)).
+	\]
+	Since this holds for every variable $x\in\dom(\mu)$, we obtain
+	\[
+	\mu'=E^{-1}(\mu).
+	\]
+	Thus, $\mathcal{B}_k$ does not compute $\mu$ and then apply $E^{-1}$ afterwards; rather, its run emits the same variable markers as $\cA$ at the positions already transported back to the original document.
+	
+	We now finish the proof. The previous argument shows the following correspondence: accepting runs of $\mathcal{B}_k$ over $d$ are in one-to-one correspondence with pairs consisting of an edit script $E\in\ValidEdits{k}{d}$ and an accepting run of $\cA$ over $E(d)$. Moreover, if the run of $\cA$ produces a mapping $\mu$, then the corresponding run of $\mathcal{B}_k$ produces exactly the transported mapping $E^{-1}(\mu)$.
+	
+	Therefore, for every document $d$,
+\[
+\begin{aligned}
+	\sem{\mathcal{B}_k}{d}
+	&=
+	\left\{
+	E^{-1}(\mu)
+	\;\middle|\;
+	E\in\ValidEdits{k}{d}
+	\text{ and }
+	\mu\in\sem{\cA}{E(d)}
+	\right\} \\
+	&=
+	\left\{
+	E^{-1}(\mu)
+	\;\middle|\;
+	E\in\ValidEdits{k}{d}
+	\text{ and }
+	\mu\in\sem{S}{E(d)}
+	\right\} \\
+	&=
+	\projeditsem{S}{k}{d}.
+\end{aligned}
+\]
+
+	The second equality follows from $\sem{\cA}{d'}=\sem{S}{d'}$ for every document $d'$, and the last equality is exactly the definition of the projected edit semantics.
+	
+	Thus, $\projeditsem{S}{k}{\cdot}$ is definable by the variable-set automaton $\mathcal{B}_k$. Therefore, it is a regular document spanner.
+	
+\end{proof}

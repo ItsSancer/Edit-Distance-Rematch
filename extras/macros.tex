@@ -34,7 +34,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \usepackage{todonotes}
-\newcommand{\martin}[1]{\todo[inline, color=green!20]{{\bf Martin:} #1}}
+\newcommand{\santiago}[1]{\todo[inline, color=violet!20]{{\bf Santiago:} #1}}
 \newcommand{\cristian}[1]{\todo[inline, color=red!20]{{\bf Cristian:} #1}}
 
 %IF YOU WANT TO REMOVE COMMENTS, UNCOMMENT THE NEXT LINES
@@ -76,8 +76,9 @@
 
 
 \newcommand{\sem}[2]{\llbracket #1 \rrbracket(#2)}
-\newcommand{\editsem}[3]{
-	\llbracket #1 \rrbracket_{\leq #2}^{\operatorname{edit}}(#3)}
+\newcommand{\editsem}[3]{\llbracket #1 \rrbracket_{\leq #2}^{\mathsf{edit}}(#3)}
+\newcommand{\projeditsem}[3]{\llbracket #1 \rrbracket_{\leq #2}(#3)}
+\newcommand{\ValidEdits}[2]{\operatorname{Edits}_{\leq #1}(#2)}
 \newcommand{\dom}{\mathsf{dom}}
 \newcommand{\ox}{x\!\vdash}
 \newcommand{\cx}{\dashv\!x}
