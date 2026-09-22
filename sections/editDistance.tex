@@ -1,68 +1,65 @@
 %!TEX root = ../main/main.tex
 
-To model extraction under errors, we consider documents that may differ from an ideal match by a bounded number of edit operations. In this section we define the edit model that will be used throughout the paper, both at the level of documents and at the level of extracted mappings.
-
+To model extraction under errors, we consider documents that may differ from an ideal match by a bounded number of edit operations. In this section we define the edit model used throughout the paper. We first define edit operations at the level of documents, and then define their canonical action on spans and mappings.
 
 \subsection{Edit operations}
 
-Let $d = a_0 a_1 \cdots a_{n-1} \in \Sigma^*$ be a document. 
-For $i \in \mathbb{N}$ and $c \in \Sigma$, we consider the following atomic edit operations, viewed as functions over $\Sigma^*$:
+Let $d=a_1\cdots a_n\in\Sigma^*$ be a document. For $p\in\mathbb{N}$ and $c\in\Sigma$, we consider the following atomic edit operations.
+
+An \emph{insertion} $\ins_{p,c}$ is valid on $d$ if $1\leq p\leq n+1$. Its effect is
 \[
-\ins_{i,c},\ \del_i,\ \sub_{i,c} : \Sigma^* \to \Sigma^*.
+\ins_{p,c}(d)
+=
+a_1\cdots a_{p-1}\,c\,a_p\cdots a_n.
 \]
-They are defined as follows:
+In particular, the case $p=n+1$ appends $c$ at the end of the document.
+
+A \emph{deletion} $\del_p$ is valid on $d$ if $1\leq p\leq n$. Its effect is
 \[
-\ins_{i,c}(d) =
-\begin{cases}
-	a_1 \cdots a_{i-1}\, c\, a_i \cdots a_n, & \text{if } 1 \leq i \leq n+1,\\
-	d, & \text{otherwise,}
-\end{cases}
-\]
-\[
-\del_i(d) =
-\begin{cases}
-	a_1 \cdots a_{i-1} a_{i+1} \cdots a_n, & \text{if } 1 \leq i \leq n,\\
-	d, & \text{otherwise,}
-\end{cases}
-\]
-\[
-\sub_{i,c}(d) =
-\begin{cases}
-	a_1 \cdots a_{i-1}\, c\, a_{i+1} \cdots a_n, & \text{if } 1 \leq i \leq n,\\
-	d, & \text{otherwise.}
-\end{cases}
+\del_p(d)
+=
+a_1\cdots a_{p-1}a_{p+1}\cdots a_n.
 \]
 
-Thus, an edit operation whose index is not valid for the current document has no effect and returns the document unchanged.  
-Insertions are allowed at positions $1$ through $n+1$:the special case $i=n+1$ appends the character to the end. 
-Deletions and substitutions affect only positions $1$ through $n$.
-Edit operations are always interpreted over the current version of the document at the moment they are applied; in particular, the effect of an edit may depend on the edits that precede it.
+A \emph{substitution} $\sub_{p,c}$ is valid on $d$ if $1\leq p\leq n$. Its effect is
+\[
+\sub_{p,c}(d)
+=
+a_1\cdots a_{p-1}\,c\,a_{p+1}\cdots a_n.
+\]
 
-\subsection{Edit scripts and edit distance}
 
 Let
 \[
 \operatorname{Edits}
 =
-\{\ins_{i,c} \mid i \in \mathbb{N},\ c \in \Sigma\}
+\{\ins_{p,c}\mid p\in\mathbb{N},\,c\in\Sigma\}
 \cup
-\{\del_i \mid i \in \mathbb{N}\}
+\{\del_p\mid p\in\mathbb{N}\}
 \cup
-\{\sub_{i,c} \mid i \in \mathbb{N},\ c \in \Sigma\}
+\{\sub_{p,c}\mid p\in\mathbb{N},\,c\in\Sigma\}
 \]
 be the set of all atomic edit operations over $\Sigma$.
 
-An \emph{edit script} is a finite sequence of atomic edit operations
-\[
-E = e_1 \cdots e_m \in \operatorname{Edits}^*.
-\]
-The empty edit script is denoted by $\epsilon$. Its action on a document $d \in \Sigma^*$ is defined by $\epsilon(d) = d$ and, for $E = e_1 \cdots e_m$
-\[
-E(d) = e_m(\cdots e_2(e_1(d)) \cdots).
-\]
-Equivalently, $E(d)$ is the document obtained by applying the operations of $E$ from left to right.We write $|E|$ for the length of the script, namely the number of atomic edit operations occurring in $E$.
+\subsection{Edit scripts}
 
-The \emph{edit distance} between two documents $d,d' \in \Sigma^*$ is denoted by
+An \emph{edit script} is a finite sequence
+\[
+E=e_1\cdots e_m\in\operatorname{Edits}^*.
+\]
+The empty edit script is denoted by $\epsilon$. A script $E=e_1\cdots e_m$ is \emph{valid} on a document $d$ if $e_1$ is valid on $d$, $e_2$ is valid on $e_1(d)$, and so on.
+
+The action of a valid edit script on $d$ is defined by
+\[
+\epsilon(d)=d
+\]
+and
+\[
+E(d)=e_m(\cdots e_2(e_1(d))\cdots).
+\]
+Equivalently, the operations of $E$ are applied from left to right. We write $|E|=m$ for the length of the script.
+
+The \emph{edit distance} between two documents $d,d'\in\Sigma^*$ is denoted by
 \[
 \operatorname{edist}(d,d')
 \]
@@ -70,21 +67,22 @@ and is defined as
 \[
 \operatorname{edist}(d,d')
 =
-\min \{\, |E| \mid E \in \operatorname{Edits}^* \text{ and } E(d)=d' \,\}.
+\min
+\{
+|E|
+\mid
+E\in\operatorname{Edits}^*,
+\ E \text{ is valid on } d,
+\ E(d)=d'
+\}.
 \]
 
-$\operatorname{edist}$
-
-$\operatorname{dist}$
-
-
 \begin{example}
-	Let $d = \mathtt{a}$ and $d' = \mathtt{abc}$. 
-	Then
+	Let $d=\mathtt{a}$ and $d'=\mathtt{abc}$. Then
 	\[
-	E = \ins_{2,\mathtt{b}}\,\ins_{3,\mathtt{c}}
+	E=\ins_{2,\mathtt{b}}\,\ins_{3,\mathtt{c}}
 	\]
-	is an edit script such that $E(d)=d'$. Indeed,
+	is a valid edit script on $d$ such that $E(d)=d'$. Indeed,
 	\[
 	\mathtt{a}
 	\xrightarrow{\ins_{2,\mathtt{b}}}
@@ -92,103 +90,240 @@ $\operatorname{dist}$
 	\xrightarrow{\ins_{3,\mathtt{c}}}
 	\mathtt{abc}.
 	\]
-	Hence,
+	At least two insertions are necessary therefore
 	\[
-	\operatorname{edist}(\mathtt{a},\mathtt{abc}) = 2.
+	\operatorname{edist}(\mathtt{a},\mathtt{abc})=2.
 	\]
-	In fact, $\operatorname{edist}(\mathtt{a},\mathtt{abc}) = 2$, since transforming $\mathtt{a}$ into $\mathtt{abc}$ requires inserting at least two symbols.
 \end{example}
 
-\subsection{Transporting mappings through edit scripts}
 
-Since our extraction results are mappings from variables to spans, we also need to specify how edits affect captured spans.
+\santiago{Lo anterior deberia estar bien. Lo que viene a continuacion es todo lo nuevo a revisar}
 
-Let $d = a_1 \cdots a_n \in \Sigma^*$ be a document, and let $\Span{i,j}$ be a span over $d$, with $1 \leq i \leq j \leq n+1$
-For an atomic edit operation $e \in \operatorname{Edits}$, we define the transported span $e(\Span{i,j})$ as follows.
+\subsection{Edit distance in information extraction}
 
-For insertions, if $1 \leq p \leq n+1$, we set
+Given a document \(d\) and a query
+\(S\), an approximate extraction semantics should explain when a mapping
+\(\nu\) over \(d\) is justified by the existence of an edited document \(d'\)
+such that \(S\) matches \(d'\) exactly.
+
+More concretely, suppose that an edit script \(E\) transforms \(d\) into \(d'\),
+and that
 \[
-\ins_{p,c}(\Span{i,j}) =
-\begin{cases}
-	\Span{i+1,j+1} & \text{if } p \leq i,\\
-	\Span{i,j+1} & \text{if } i < p \leq j,\\
-	\Span{i,j} & \text{if } j < p.
-\end{cases}
+\mu\in\sem{S}{d'}.
 \]
-If $p$ is not a valid insertion position for $d$, then $\ins_{p,c}(\Span{i,j}) = \Span{i,j}$.
+Then the central question is how the mapping \(\mu\), whose spans refer to
+positions in \(d'\), induces an output mapping \(\nu\), whose spans must refer to
+positions in the original document \(d\).
 
-For deletions, if $1 \leq p \leq n$, we set
+A first, natural idea is the following. Let \(E\) be an edit script such that
+\(E(d)=d'\), and let
 \[
-\del_p(\Span{i,j}) =
-\begin{cases}
-	\Span{i-1,j-1} & \text{if } p < i,\\
-	\Span{i,j-1} & \text{if } i \leq p < j,\\
-	\Span{i,j} & \text{if } j \leq p.
-\end{cases}
+\mu\in\sem{S}{d'}.
 \]
-If $p$ is not a valid deletion position for $d$, then $\del_p(\Span{i,j}) = \Span{i,j}$.
-
-For substitutions, spans are unchanged:
+Then one would like to transport \(\mu\) back through the edit script \(E\), in
+order to obtain a mapping over \(d\). This suggests a semantics of the form
 \[
-\sub_{p,c}(\Span{i,j}) = \Span{i,j}.
+\nu = E^{-1}(\mu).
 \]
+Under this view, approximate extraction would return all mappings \(\nu\) for
+which there exists an edited document \(d'\), an edit script \(E\) from \(d\) to
+\(d'\), and an exact match \(\mu\in\sem{S}{d'}\), such that \(\nu\) is obtained
+by transporting \(\mu\) back along \(E\).
+
+%
+%\begin{example}	
+%	Consider the document $d=\mathtt{ac}.$	
+%	First, consider the query
+%	\[
+%	S_1=\mathtt a\cdot \mathtt b\cdot x\{\mathtt c\}.
+%	\]
+%	By inserting \(\mathtt b\) at position \(2\), we obtain $d'=\mathtt{abc}$. On \(d'\), the exact match assigns
+%	\[
+%	\mu_1(x)=\Span{3,4}.
+%	\]
+%	Transporting this match back to the original document \(d\), the inserted
+%	symbol \(\mathtt b\) disappears. Since this symbol occurs before the opening
+%	of \(x\), the resulting output should be
+%	\[
+%	\nu_1(x)=\Span{2,3}.
+%	\]
+%	
+%This result means that we capture de letter $c$ in the %original document $d$ but we have to insert a letter $b$ to match the query $S_1$.
+
+%Now consider instead the query
+%\[
+%S_2=\mathtt a\cdot x\{\mathtt b\mathtt c\}.
+%\]
+%Using the same document edit as before, we obtain 
+%$ d=\mathtt{ac} \xrightarrow{\ins_{2,\mathtt b}} d'=\mathtt{abc},$ the exact match on \(d'\) assigns
+%\[
+%\mu_2(x)=\Span{2,4}.
+%\]
+%In this case, the inserted symbol \(\mathtt b\) belongs to the capture of
+%\(x\). After transporting the match back to \(d\), we again should obtain
+%\[
+%\nu_2(x)=\Span{2,3}.
+%\]
+
+%Thus, both cases use the same document edit and produce the same output
+%mapping over the original document:
+%\[
+%\nu_1(x)=\nu_2(x)=\Span{2,3}.
+%\]
+%However, the inserted symbol is outside the capture in the first case and
+%inside the capture in the second one. Therefore, the plain edit operation
+%\(\ins_{2,\mathtt b}\) does not determine its effect on captured spans.
+%\end{example}
 
 
-These operations extend pointwise to mappings. If $\mu$ is a mapping over $d$, then $e(\mu)$ is the mapping with domain $\dom(\mu)$ such that, for every $x \in \dom(\mu)$,
+\subsection{Plain edit scripts are not enough}
+
+Let see an example to introduce the problem:
+
+\begin{example}
+	Consider the query $S=\mathtt a\cdot x\{\mathtt c\}$
+	over the document $d=\mathtt{abc}.$
+	By deleting the symbol \(\mathtt b\) at position \(2\), we obtain
+	\[
+	d'=\mathtt{ac}.
+	\]
+	On \(d'\), the exact match assigns
+	\[
+	\mu(x)=\Span{2,3}.
+	\]
+	
+	Now suppose that we want to transport this exact match back to the original
+	document \(d\). Since \(d'\) was obtained from \(d\) by deleting
+	\(\mathtt b\), transporting the mapping back amounts to inserting
+	\(\mathtt b\) again at position \(2\).
+	
+	However, this insertion can be interpreted in two different ways with
+	respect to the capture of \(x\).
+	
+	First, the deleted symbol may have occurred before opening \(x\). In that
+	case, the run is intuitively
+	\[
+	\mathtt a\;\; \del(\mathtt b)\;\; x\{\mathtt c\},
+	\]
+	and after transporting the match back to \(d\), the output should be
+	\[
+	\nu_1(x)=\Span{3,4}.
+	\]
+	This means that \(x\) captures only the symbol \(\mathtt c\) in the original
+	document.
+	
+	Second, the deleted symbol may have occurred after opening \(x\). In that
+	case, the run is intuitively
+	\[
+	\mathtt a\;\; x\{\del(\mathtt b)\;\mathtt c\},
+	\]
+	and after transporting the match back to \(d\), the output should be
+	\[
+	\nu_2(x)=\Span{2,4}.
+	\]
+	This means that \(x\) captures the substring \(\mathtt{bc}\) in the original
+	document.
+	
+\end{example}
+
+The problem is that an inverse delete operation does not determine how the insertion should interact with the variable markers. In the last example, the symbol \(\mathtt b\) may be reinserted
+before the capture of \(x\), or inside the capture of \(x\), leading to
+different output mappings and both ways are compatible with the mapping over de edited document.
+
+
+For this reason, in our definition of a approximate extraction, edit operations are allowed to occur at different points of an extraction run and their effect on the output mapping is determined by their position relative to the opening and closing markers of variables.
+
+
+\subsection{The solution}
+
+\subsection{Approximate variable-set automata}
+
+
+
+Let $\mathcal{A}=(Q,\Sigma,V,q_0,F,\delta)$
+be a variable-set automaton, and let \(k\in\mathbb{N}\). We define the
+\(k\)-approximate automaton of \(\mathcal{A}\) as
 \[
-e(\mu)(x) = e(\mu(x)).
+\mathcal{A}_{\leq k}=(Q',\Sigma,V,q'_0,F',\delta'),
 \]
+where
+\begin{itemize}
+	\item $Q'=Q\times\{0,\ldots,k\}$
+	\item $q'_0=(q_0,0)$
+	\item $F'=F\times\{0,\ldots,k\}$
+\end{itemize}
 
-Finally, if$E = e_1 \cdots e_m \in \operatorname{Edits}^*$
-is an edit script, its action on mappings is defined by
+
+The second component of a state counts the number of edit operations used so
+far.
+
+The transition relation \(\delta'\) is defined as follows.
+
+\paragraph{Variable transitions.}
+For every variable marker transition
 \[
-\epsilon(\mu)=\mu,
+(q,\gamma,q')\in\delta,
 \]
-and
+where \(\gamma\in\{\ox,\cx\mid x\in V\}\), and every \(r\leq k\), we add
 \[
-E(\mu) = e_m(\cdots e_2(e_1(\mu))\cdots).
+((q,r),\gamma,(q',r))\in\delta'.
 \]
+Variable transitions do not consume input and do not increase the edit cost.
 
-Intuitively, $E(\mu)$ is the mapping obtained by relocating the spans of $\mu$ so that they remain consistent with the edited document $E(w)$.
 
-\subsection{Inverse transport of mappings}
-
-We are mainly interested in transporting mappings back from an edited document to the original one. 
-For this reason, we define the inverse action of an edit script on spans and mappings.
-
-Let $e \in \operatorname{Edits}$ be an atomic edit operation. 
-We define its inverse span transport, denoted by $e^{-1}$, by using the opposite length-changing operation:
+\paragraph{Exact letter transitions.}
+For every letter transition
 \[
-(\ins_{i,c})^{-1} = \del_i,
-\qquad
-(\del_i)^{-1} = \ins_{i,c} \text{ for any } c \in \Sigma,
-\qquad
-(\sub_{i,c})^{-1} = \sub_{i,c}.
+(q,c,q')\in\delta
 \]
-The choice of $c$ in $(\del_i)^{-1}$ is irrelevant, since the symbol inserted by an insertion does not affect how spans are transported.
-
-Thus, the inverse transport of an insertion is computed as a deletion at the same position, the inverse transport of a deletion is computed as an insertion at the same position, and substitutions leave spans unchanged.
-
-This inverse transport extends pointwise to mappings. 
-If $\mu$ is a mapping, then $e^{-1}(\mu)$ has the same domain as $\mu$ and satisfies
+and every \(r\leq k\), we add
 \[
-e^{-1}(\mu)(x)=e^{-1}(\mu(x))
-\qquad
-\text{for every } x \in \dom(\mu).
+((q,r),c,(q',r))\in\delta'.
 \]
+This corresponds to reading the expected symbol without using an edit operation.
 
-Now let $E=e_1\cdots e_m \in \operatorname{Edits}^*$
-be an edit script. 
-The inverse span transport induced by $E$ is
+\paragraph{Substitution transitions.}
+For every letter transition
 \[
-E^{-1}(\mu)
-=
-e_1^{-1}(e_2^{-1}(\cdots e_m^{-1}(\mu)\cdots)).
+(q,c,q')\in\delta,
 \]
-In other words, $E^{-1}(\mu)$ is obtained by moving the spans of $\mu$ backwards through the edits of $E$, starting from the last edit and ending with the first one.
+every \(a\in\Sigma\) with \(a\neq c\), and every \(r<k\), we add
+\[
+((q,r),a,(q',r+1))\in\delta'.
+\]
+This consumes the symbol \(a\) from the original document while simulating the
+symbol \(c\) expected by \(\mathcal{A}\).
 
-If $E=\epsilon$, then no edit has been applied. Hence, the inverse transport induced by $E$ is the identity on mappings:
+\paragraph{Insertion transitions.}
+For every letter transition
 \[
-\epsilon^{-1}(\mu)=\mu.
+(q,c,q')\in\delta
 \]
-In particular, $\epsilon^{-1}=\epsilon$.
+and every \(r<k\), we add
+\[
+((q,r),\varepsilon,(q',r+1))\in\delta'.
+\]
+This simulates that the symbol \(c\) is inserted in the edited document. The
+transition advances in the original automaton but consumes no symbol from the
+original document.
+
+\paragraph{Deletion transitions.}
+For every state \(q\in Q\), every \(a\in\Sigma\), and every \(r<k\), we add
+\[
+((q,r),a,(q,r+1))\in\delta'.
+\]
+This consumes the symbol \(a\) from the original document without advancing in
+the original automaton. Intuitively, the symbol is deleted before the exact
+match is performed.
+
+The semantics of \(\mathcal{A}_{\leq k}\) is the ordinary semantics of a
+variable-set automaton over the original input document. That is, for a document
+\(d\), every accepting run of \(\mathcal{A}_{\leq k}\) over \(d\) produces a
+mapping whose spans are boundaries of \(d\).
+
+The important point is that different placements of the same edit operation are
+represented by different runs. For instance, a deletion transition taken before
+the opening marker \(x\vdash\) deletes a symbol outside the capture of \(x\),
+whereas the same deletion transition taken after \(x\vdash\) and before
+\(\dashv x\) deletes a symbol inside the capture of \(x\). Thus, the position of
+an edit relative to the variable markers is determined by the run itself.
